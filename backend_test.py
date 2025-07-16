@@ -302,9 +302,331 @@ class BackendTester:
             self.log_test("User Management", False, f"User management error: {str(e)}")
             return False
     
+    def test_workspaces_api(self):
+        """Test 9: Workspaces API - Test workspace CRUD operations"""
+        try:
+            if not self.auth_token:
+                if not self.test_user_login():
+                    self.log_test("Workspaces API", False, "No auth token available")
+                    return False
+            
+            # Test creating a workspace
+            workspace_data = {
+                "name": "Marketing Team Workspace",
+                "icon": "📊",
+                "settings": {"theme": "light", "notifications": True}
+            }
+            
+            create_response = self.session.post(f"{API_BASE}/workspaces/", json=workspace_data)
+            
+            if create_response.status_code != 200:
+                self.log_test("Workspaces API - Create", False, f"Create failed: {create_response.status_code} - {create_response.text}")
+                return False
+            
+            workspace = create_response.json()
+            workspace_id = workspace.get('id')
+            self.log_test("Workspaces API - Create", True, f"Workspace created: {workspace.get('name')}")
+            
+            # Test getting all workspaces
+            get_all_response = self.session.get(f"{API_BASE}/workspaces/")
+            if get_all_response.status_code != 200:
+                self.log_test("Workspaces API - Get All", False, f"Get all failed: {get_all_response.status_code}")
+                return False
+            
+            workspaces = get_all_response.json()
+            self.log_test("Workspaces API - Get All", True, f"Retrieved {len(workspaces)} workspaces")
+            
+            # Test getting specific workspace
+            get_response = self.session.get(f"{API_BASE}/workspaces/{workspace_id}")
+            if get_response.status_code != 200:
+                self.log_test("Workspaces API - Get Single", False, f"Get single failed: {get_response.status_code}")
+                return False
+            
+            self.log_test("Workspaces API - Get Single", True, f"Retrieved workspace: {get_response.json().get('name')}")
+            
+            # Test updating workspace
+            update_data = {
+                "name": "Updated Marketing Team",
+                "settings": {"theme": "dark", "notifications": False}
+            }
+            
+            update_response = self.session.put(f"{API_BASE}/workspaces/{workspace_id}", json=update_data)
+            if update_response.status_code != 200:
+                self.log_test("Workspaces API - Update", False, f"Update failed: {update_response.status_code}")
+                return False
+            
+            updated_workspace = update_response.json()
+            self.log_test("Workspaces API - Update", True, f"Workspace updated: {updated_workspace.get('name')}")
+            
+            # Test deleting workspace
+            delete_response = self.session.delete(f"{API_BASE}/workspaces/{workspace_id}")
+            if delete_response.status_code != 200:
+                self.log_test("Workspaces API - Delete", False, f"Delete failed: {delete_response.status_code}")
+                return False
+            
+            self.log_test("Workspaces API - Delete", True, "Workspace deleted successfully")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Workspaces API", False, f"Workspaces API error: {str(e)}")
+            return False
+    
+    def test_pages_api(self):
+        """Test 10: Pages API - Test page CRUD operations"""
+        try:
+            if not self.auth_token:
+                if not self.test_user_login():
+                    self.log_test("Pages API", False, "No auth token available")
+                    return False
+            
+            # First create a workspace for pages
+            workspace_data = {
+                "name": "Pages Test Workspace",
+                "icon": "📝",
+                "settings": {}
+            }
+            
+            workspace_response = self.session.post(f"{API_BASE}/workspaces/", json=workspace_data)
+            if workspace_response.status_code != 200:
+                self.log_test("Pages API - Setup", False, "Failed to create test workspace")
+                return False
+            
+            workspace_id = workspace_response.json().get('id')
+            
+            # Test creating a page
+            page_data = {
+                "title": "Project Planning Document",
+                "icon": "📋",
+                "workspace_id": workspace_id,
+                "content": [
+                    {"type": "heading", "text": "Project Overview"},
+                    {"type": "paragraph", "text": "This is a test page for project planning."}
+                ]
+            }
+            
+            create_response = self.session.post(f"{API_BASE}/pages/", json=page_data)
+            
+            if create_response.status_code != 200:
+                self.log_test("Pages API - Create", False, f"Create failed: {create_response.status_code} - {create_response.text}")
+                return False
+            
+            page = create_response.json()
+            page_id = page.get('id')
+            self.log_test("Pages API - Create", True, f"Page created: {page.get('title')}")
+            
+            # Test getting all pages
+            get_all_response = self.session.get(f"{API_BASE}/pages/?workspace_id={workspace_id}")
+            if get_all_response.status_code != 200:
+                self.log_test("Pages API - Get All", False, f"Get all failed: {get_all_response.status_code}")
+                return False
+            
+            pages = get_all_response.json()
+            self.log_test("Pages API - Get All", True, f"Retrieved {len(pages)} pages")
+            
+            # Test getting specific page
+            get_response = self.session.get(f"{API_BASE}/pages/{page_id}")
+            if get_response.status_code != 200:
+                self.log_test("Pages API - Get Single", False, f"Get single failed: {get_response.status_code}")
+                return False
+            
+            self.log_test("Pages API - Get Single", True, f"Retrieved page: {get_response.json().get('title')}")
+            
+            # Test updating page
+            update_data = {
+                "title": "Updated Project Planning",
+                "content": [
+                    {"type": "heading", "text": "Updated Project Overview"},
+                    {"type": "paragraph", "text": "This page has been updated with new content."}
+                ]
+            }
+            
+            update_response = self.session.put(f"{API_BASE}/pages/{page_id}", json=update_data)
+            if update_response.status_code != 200:
+                self.log_test("Pages API - Update", False, f"Update failed: {update_response.status_code}")
+                return False
+            
+            updated_page = update_response.json()
+            self.log_test("Pages API - Update", True, f"Page updated: {updated_page.get('title')}")
+            
+            # Test deleting page
+            delete_response = self.session.delete(f"{API_BASE}/pages/{page_id}")
+            if delete_response.status_code != 200:
+                self.log_test("Pages API - Delete", False, f"Delete failed: {delete_response.status_code}")
+                return False
+            
+            self.log_test("Pages API - Delete", True, "Page deleted successfully")
+            
+            # Clean up workspace
+            self.session.delete(f"{API_BASE}/workspaces/{workspace_id}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Pages API", False, f"Pages API error: {str(e)}")
+            return False
+    
+    def test_databases_api(self):
+        """Test 11: Databases API - Test database CRUD operations and rows"""
+        try:
+            if not self.auth_token:
+                if not self.test_user_login():
+                    self.log_test("Databases API", False, "No auth token available")
+                    return False
+            
+            # First create a workspace for databases
+            workspace_data = {
+                "name": "Database Test Workspace",
+                "icon": "🗄️",
+                "settings": {}
+            }
+            
+            workspace_response = self.session.post(f"{API_BASE}/workspaces/", json=workspace_data)
+            if workspace_response.status_code != 200:
+                self.log_test("Databases API - Setup", False, "Failed to create test workspace")
+                return False
+            
+            workspace_id = workspace_response.json().get('id')
+            
+            # Test creating a database
+            database_data = {
+                "name": "Customer Database",
+                "workspace_id": workspace_id,
+                "properties": {
+                    "Name": {"type": "title"},
+                    "Email": {"type": "email"},
+                    "Status": {"type": "select", "options": ["Active", "Inactive"]},
+                    "Created": {"type": "date"}
+                },
+                "views": [
+                    {"name": "All Customers", "type": "table", "filter": {}},
+                    {"name": "Active Only", "type": "table", "filter": {"Status": "Active"}}
+                ]
+            }
+            
+            create_response = self.session.post(f"{API_BASE}/databases/", json=database_data)
+            
+            if create_response.status_code != 200:
+                self.log_test("Databases API - Create", False, f"Create failed: {create_response.status_code} - {create_response.text}")
+                return False
+            
+            database = create_response.json()
+            database_id = database.get('id')
+            self.log_test("Databases API - Create", True, f"Database created: {database.get('name')}")
+            
+            # Test getting all databases
+            get_all_response = self.session.get(f"{API_BASE}/databases/?workspace_id={workspace_id}")
+            if get_all_response.status_code != 200:
+                self.log_test("Databases API - Get All", False, f"Get all failed: {get_all_response.status_code}")
+                return False
+            
+            databases = get_all_response.json()
+            self.log_test("Databases API - Get All", True, f"Retrieved {len(databases)} databases")
+            
+            # Test getting specific database
+            get_response = self.session.get(f"{API_BASE}/databases/{database_id}")
+            if get_response.status_code != 200:
+                self.log_test("Databases API - Get Single", False, f"Get single failed: {get_response.status_code}")
+                return False
+            
+            self.log_test("Databases API - Get Single", True, f"Retrieved database: {get_response.json().get('name')}")
+            
+            # Test updating database
+            update_data = {
+                "name": "Updated Customer Database",
+                "properties": {
+                    "Name": {"type": "title"},
+                    "Email": {"type": "email"},
+                    "Status": {"type": "select", "options": ["Active", "Inactive", "Pending"]},
+                    "Created": {"type": "date"},
+                    "Notes": {"type": "text"}
+                }
+            }
+            
+            update_response = self.session.put(f"{API_BASE}/databases/{database_id}", json=update_data)
+            if update_response.status_code != 200:
+                self.log_test("Databases API - Update", False, f"Update failed: {update_response.status_code}")
+                return False
+            
+            updated_database = update_response.json()
+            self.log_test("Databases API - Update", True, f"Database updated: {updated_database.get('name')}")
+            
+            # Test database rows - Create row
+            row_data = {
+                "database_id": database_id,
+                "properties": {
+                    "Name": "Sarah Wilson",
+                    "Email": "sarah.wilson@company.com",
+                    "Status": "Active",
+                    "Created": "2024-01-15",
+                    "Notes": "VIP customer"
+                }
+            }
+            
+            create_row_response = self.session.post(f"{API_BASE}/databases/{database_id}/rows", json=row_data)
+            if create_row_response.status_code != 200:
+                self.log_test("Databases API - Create Row", False, f"Create row failed: {create_row_response.status_code}")
+                return False
+            
+            row = create_row_response.json()
+            row_id = row.get('id')
+            self.log_test("Databases API - Create Row", True, f"Row created for: {row.get('properties', {}).get('Name')}")
+            
+            # Test getting all rows
+            get_rows_response = self.session.get(f"{API_BASE}/databases/{database_id}/rows")
+            if get_rows_response.status_code != 200:
+                self.log_test("Databases API - Get Rows", False, f"Get rows failed: {get_rows_response.status_code}")
+                return False
+            
+            rows = get_rows_response.json()
+            self.log_test("Databases API - Get Rows", True, f"Retrieved {len(rows)} rows")
+            
+            # Test updating row
+            row_update_data = {
+                "properties": {
+                    "Name": "Sarah Wilson",
+                    "Email": "sarah.wilson@newcompany.com",
+                    "Status": "Inactive",
+                    "Created": "2024-01-15",
+                    "Notes": "Customer moved to competitor"
+                }
+            }
+            
+            update_row_response = self.session.put(f"{API_BASE}/databases/{database_id}/rows/{row_id}", json=row_update_data)
+            if update_row_response.status_code != 200:
+                self.log_test("Databases API - Update Row", False, f"Update row failed: {update_row_response.status_code}")
+                return False
+            
+            self.log_test("Databases API - Update Row", True, "Row updated successfully")
+            
+            # Test deleting row
+            delete_row_response = self.session.delete(f"{API_BASE}/databases/{database_id}/rows/{row_id}")
+            if delete_row_response.status_code != 200:
+                self.log_test("Databases API - Delete Row", False, f"Delete row failed: {delete_row_response.status_code}")
+                return False
+            
+            self.log_test("Databases API - Delete Row", True, "Row deleted successfully")
+            
+            # Test deleting database
+            delete_response = self.session.delete(f"{API_BASE}/databases/{database_id}")
+            if delete_response.status_code != 200:
+                self.log_test("Databases API - Delete", False, f"Delete failed: {delete_response.status_code}")
+                return False
+            
+            self.log_test("Databases API - Delete", True, "Database deleted successfully")
+            
+            # Clean up workspace
+            self.session.delete(f"{API_BASE}/workspaces/{workspace_id}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Databases API", False, f"Databases API error: {str(e)}")
+            return False
+
     def run_all_tests(self):
-        """Run all backend authentication tests"""
-        print(f"🚀 Starting Backend Authentication System Tests")
+        """Run all backend tests including authentication and API endpoints"""
+        print(f"🚀 Starting Complete Backend API Tests")
         print(f"📍 Backend URL: {API_BASE}")
         print("=" * 60)
         
@@ -317,6 +639,9 @@ class BackendTester:
             ("MFA Login", self.test_mfa_login),
             ("Rate Limiting", self.test_rate_limiting),
             ("User Management", self.test_user_management),
+            ("Workspaces API", self.test_workspaces_api),
+            ("Pages API", self.test_pages_api),
+            ("Databases API", self.test_databases_api),
         ]
         
         results = {}
