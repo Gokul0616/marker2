@@ -14,6 +14,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -23,19 +24,30 @@ export const AuthProvider = ({ children }) => {
     if (token && savedUser) {
       try {
         const userObj = JSON.parse(savedUser);
+        // Add default role if not present
+        if (!userObj.role) {
+          userObj.role = 'owner';
+        }
         setUser(userObj);
         
         // Verify token is still valid
         authAPI.getCurrentUser()
           .then(currentUser => {
+            // Ensure user has proper role
+            if (!currentUser.role) {
+              currentUser.role = 'owner';
+            }
             setUser(currentUser);
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            setError(null);
           })
-          .catch(() => {
+          .catch((err) => {
             // Token is invalid, clear auth
+            console.error('Token validation failed:', err);
             logout();
           });
       } catch (error) {
+        console.error('Error parsing saved user:', error);
         logout();
       }
     }
@@ -45,19 +57,28 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
+      setError(null);
       const user = await authAPI.register(userData);
       return { success: true, user };
     } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'Registration failed';
+      setError(errorMessage);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Registration failed' 
+        error: errorMessage 
       };
     }
   };
 
   const login = async (email, password) => {
     try {
+      setError(null);
       const response = await authAPI.login({ email, password });
+      
+      // Ensure user has proper role
+      if (!response.user.role) {
+        response.user.role = 'owner';
+      }
       
       // Store auth token and user info
       localStorage.setItem('authToken', response.access_token);
@@ -66,6 +87,9 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user: response.user };
     } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'Login failed';
+      setError(errorMessage);
+      
       if (error.response?.status === 202) {
         // MFA required
         const userId = error.response.headers['x-user-id'];
@@ -84,7 +108,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         return { 
           success: false, 
-          error: error.response?.data?.detail || 'Login failed' 
+          error: errorMessage 
         };
       }
     }
@@ -92,7 +116,13 @@ export const AuthProvider = ({ children }) => {
 
   const verifyMFA = async (userId, backupCode) => {
     try {
+      setError(null);
       const response = await authAPI.verifyMFA(userId, backupCode);
+      
+      // Ensure user has proper role
+      if (!response.user.role) {
+        response.user.role = 'owner';
+      }
       
       // Store auth token and user info
       localStorage.setItem('authToken', response.access_token);
@@ -101,9 +131,11 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user: response.user };
     } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'MFA verification failed';
+      setError(errorMessage);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'MFA verification failed' 
+        error: errorMessage 
       };
     }
   };
@@ -112,6 +144,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
     setUser(null);
+    setError(null);
   };
 
   const updateUser = (updatedUser) => {
@@ -119,14 +152,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
   };
 
+  const clearError = () => {
+    setError(null);
+  };
+
   const value = {
     user,
     loading,
+    error,
     register,
     login,
     verifyMFA,
     logout,
-    updateUser
+    updateUser,
+    clearError
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
