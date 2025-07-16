@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build": "cd frontend && yarn build",
+    "dev": "concurrently \"cd backend && python server.py\" \"cd frontend && yarn start\"",
+    "frontend": "cd frontend && yarn start",
+    "backend": "cd backend && python server.py"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
