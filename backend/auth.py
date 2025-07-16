@@ -4,12 +4,12 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, relationship
 from pydantic import BaseModel
 import secrets
 import string
 import os
-from .database import get_db, User, MFABackupCode
+from database import get_db, User, MFABackupCode
 
 # Security configurations
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fallback-secret-key')
