@@ -40,6 +40,20 @@ class UserResponse(BaseModel):
     
     class Config:
         from_attributes = True
+    
+    @classmethod
+    def from_orm(cls, obj):
+        # Convert UUID to string for serialization
+        data = {
+            'id': str(obj.id),
+            'name': obj.name,
+            'email': obj.email,
+            'avatar': obj.avatar,
+            'color': obj.color,
+            'is_active': obj.is_active,
+            'mfa_enabled': obj.mfa_enabled
+        }
+        return cls(**data)
 
 class TokenData(BaseModel):
     user_id: Optional[str] = None
