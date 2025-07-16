@@ -79,11 +79,7 @@ const PageEditor = () => {
     page.content.some(block => block.id === c.blockId)
   );
 
-  const canEdit = page.permissions?.allowEditing && (
-    page.createdBy === user.id || 
-    user.role === 'owner' || 
-    user.role === 'editor'
-  );
+  const canEdit = page.permissions?.allowEditing && user;
 
   return (
     <div className="flex h-screen bg-white">
