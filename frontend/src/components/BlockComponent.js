@@ -5,6 +5,7 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
+import { toast } from 'sonner';
 import { 
   GripVerticalIcon, 
   MoreHorizontalIcon, 
@@ -18,7 +19,9 @@ import {
   Heading2Icon,
   Heading3Icon,
   TypeIcon,
-  DatabaseIcon
+  DatabaseIcon,
+  CopyIcon,
+  MoveIcon
 } from 'lucide-react';
 
 const BlockComponent = ({
@@ -26,9 +29,11 @@ const BlockComponent = ({
   onChange,
   onTypeChange,
   onDelete,
+  onDuplicate,
   onFocus,
   onBlur,
   onKeyDown,
+  onDragStart,
   onCursorMove,
   canEdit,
   isFocused,
@@ -59,6 +64,17 @@ const BlockComponent = ({
     onChange(block.content, { checked });
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        onChange(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const getBlockIcon = (type) => {
     const icons = {
       paragraph: TypeIcon,
@@ -77,8 +93,8 @@ const BlockComponent = ({
   };
 
   const renderBlockContent = () => {
-    const baseClasses = "w-full border-none outline-none resize-none bg-transparent";
-    const focusClasses = canEdit ? "focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" : "";
+    const baseClasses = "w-full border-none outline-none resize-none bg-transparent placeholder-gray-400 focus:placeholder-gray-300";
+    const focusClasses = canEdit ? "focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 focus:border-blue-500" : "cursor-default";
     
     switch (block.type) {
       case 'heading1':
@@ -86,14 +102,15 @@ const BlockComponent = ({
           <input
             ref={inputRef}
             type="text"
-            value={block.content}
+            value={block.content || ''}
             onChange={handleContentChange}
             onFocus={onFocus}
             onBlur={onBlur}
             onKeyDown={onKeyDown}
-            className={`${baseClasses} ${focusClasses} text-3xl font-bold py-2`}
+            className={`${baseClasses} ${focusClasses} text-3xl font-bold py-2 leading-tight`}
             placeholder="Heading 1"
             readOnly={!canEdit}
+            disabled={!canEdit}
           />
         );
       
@@ -102,14 +119,15 @@ const BlockComponent = ({
           <input
             ref={inputRef}
             type="text"
-            value={block.content}
+            value={block.content || ''}
             onChange={handleContentChange}
             onFocus={onFocus}
             onBlur={onBlur}
             onKeyDown={onKeyDown}
-            className={`${baseClasses} ${focusClasses} text-2xl font-bold py-2`}
+            className={`${baseClasses} ${focusClasses} text-2xl font-bold py-2 leading-tight`}
             placeholder="Heading 2"
             readOnly={!canEdit}
+            disabled={!canEdit}
           />
         );
       
@@ -118,32 +136,34 @@ const BlockComponent = ({
           <input
             ref={inputRef}
             type="text"
-            value={block.content}
+            value={block.content || ''}
             onChange={handleContentChange}
             onFocus={onFocus}
             onBlur={onBlur}
             onKeyDown={onKeyDown}
-            className={`${baseClasses} ${focusClasses} text-xl font-bold py-2`}
+            className={`${baseClasses} ${focusClasses} text-xl font-bold py-2 leading-tight`}
             placeholder="Heading 3"
             readOnly={!canEdit}
+            disabled={!canEdit}
           />
         );
       
       case 'bulleted_list':
         return (
           <div className="flex items-start space-x-2">
-            <span className="text-lg leading-6 mt-1">•</span>
+            <span className="text-lg leading-6 mt-1 text-gray-600">•</span>
             <input
               ref={inputRef}
               type="text"
-              value={block.content}
+              value={block.content || ''}
               onChange={handleContentChange}
               onFocus={onFocus}
               onBlur={onBlur}
               onKeyDown={onKeyDown}
-              className={`${baseClasses} ${focusClasses} flex-1 py-1`}
+              className={`${baseClasses} ${focusClasses} flex-1 py-1 leading-relaxed`}
               placeholder="List item"
               readOnly={!canEdit}
+              disabled={!canEdit}
             />
           </div>
         );
@@ -151,18 +171,19 @@ const BlockComponent = ({
       case 'numbered_list':
         return (
           <div className="flex items-start space-x-2">
-            <span className="text-lg leading-6 mt-1">1.</span>
+            <span className="text-lg leading-6 mt-1 text-gray-600">1.</span>
             <input
               ref={inputRef}
               type="text"
-              value={block.content}
+              value={block.content || ''}
               onChange={handleContentChange}
               onFocus={onFocus}
               onBlur={onBlur}
               onKeyDown={onKeyDown}
-              className={`${baseClasses} ${focusClasses} flex-1 py-1`}
+              className={`${baseClasses} ${focusClasses} flex-1 py-1 leading-relaxed`}
               placeholder="List item"
               readOnly={!canEdit}
+              disabled={!canEdit}
             />
           </div>
         );
@@ -179,25 +200,30 @@ const BlockComponent = ({
             <input
               ref={inputRef}
               type="text"
-              value={block.content}
+              value={block.content || ''}
               onChange={handleContentChange}
               onFocus={onFocus}
               onBlur={onBlur}
               onKeyDown={onKeyDown}
-              className={`${baseClasses} ${focusClasses} flex-1 py-1 ${
+              className={`${baseClasses} ${focusClasses} flex-1 py-1 leading-relaxed ${
                 block.properties?.checked ? 'line-through text-gray-500' : ''
               }`}
               placeholder="To-do item"
               readOnly={!canEdit}
+              disabled={!canEdit}
             />
           </div>
         );
       
       case 'code':
         return (
-          <div className="bg-gray-100 rounded-lg p-4">
+          <div className="bg-gray-100 rounded-lg p-4 border">
             <div className="flex items-center justify-between mb-2">
-              <Select value={block.properties?.language || 'javascript'} onValueChange={(lang) => onChange(block.content, { language: lang })}>
+              <Select 
+                value={block.properties?.language || 'javascript'} 
+                onValueChange={(lang) => onChange(block.content, { language: lang })}
+                disabled={!canEdit}
+              >
                 <SelectTrigger className="w-32 h-6 text-xs">
                   <SelectValue />
                 </SelectTrigger>
@@ -207,12 +233,14 @@ const BlockComponent = ({
                   <SelectItem value="html">HTML</SelectItem>
                   <SelectItem value="css">CSS</SelectItem>
                   <SelectItem value="json">JSON</SelectItem>
+                  <SelectItem value="sql">SQL</SelectItem>
+                  <SelectItem value="bash">Bash</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <textarea
               ref={inputRef}
-              value={block.content}
+              value={block.content || ''}
               onChange={handleContentChange}
               onFocus={onFocus}
               onBlur={onBlur}
@@ -220,44 +248,72 @@ const BlockComponent = ({
               className={`${baseClasses} ${focusClasses} font-mono text-sm min-h-[100px] bg-transparent`}
               placeholder="Enter code..."
               readOnly={!canEdit}
+              disabled={!canEdit}
             />
           </div>
         );
       
       case 'quote':
         return (
-          <div className="border-l-4 border-gray-300 pl-4 italic">
+          <div className="border-l-4 border-gray-300 pl-4 bg-gray-50 rounded-r-lg py-2">
             <textarea
               ref={inputRef}
-              value={block.content}
+              value={block.content || ''}
               onChange={handleContentChange}
               onFocus={onFocus}
               onBlur={onBlur}
               onKeyDown={onKeyDown}
-              className={`${baseClasses} ${focusClasses} text-gray-700 min-h-[60px]`}
+              className={`${baseClasses} ${focusClasses} text-gray-700 min-h-[60px] italic bg-transparent`}
               placeholder="Quote"
               readOnly={!canEdit}
+              disabled={!canEdit}
             />
           </div>
         );
       
       case 'image':
         return (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
             {block.content ? (
-              <img 
-                src={block.content} 
-                alt="Block image" 
-                className="max-w-full h-auto mx-auto"
-              />
+              <div className="relative group">
+                <img 
+                  src={block.content} 
+                  alt="Block image" 
+                  className="max-w-full h-auto mx-auto rounded-lg"
+                />
+                {canEdit && (
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onChange('')}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="space-y-2">
                 <ImageIcon className="h-8 w-8 mx-auto text-gray-400" />
                 <p className="text-gray-500">Add an image</p>
                 {canEdit && (
-                  <Button variant="outline" size="sm">
-                    Upload Image
-                  </Button>
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id={`image-upload-${block.id}`}
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => document.getElementById(`image-upload-${block.id}`).click()}
+                    >
+                      Upload Image
+                    </Button>
+                  </>
                 )}
               </div>
             )}
@@ -266,7 +322,7 @@ const BlockComponent = ({
       
       case 'database':
         return (
-          <div className="border border-gray-300 rounded-lg p-4">
+          <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
             <div className="flex items-center space-x-2 mb-2">
               <DatabaseIcon className="h-5 w-5 text-gray-500" />
               <span className="font-medium">Database</span>
@@ -284,14 +340,15 @@ const BlockComponent = ({
         return (
           <textarea
             ref={inputRef}
-            value={block.content}
+            value={block.content || ''}
             onChange={handleContentChange}
             onFocus={onFocus}
             onBlur={onBlur}
             onKeyDown={onKeyDown}
             className={`${baseClasses} ${focusClasses} min-h-[40px] leading-relaxed py-2`}
-            placeholder="Type '/' for commands"
+            placeholder="Type '/' for commands, or just start writing..."
             readOnly={!canEdit}
+            disabled={!canEdit}
             rows={1}
             style={{ resize: 'none' }}
           />
@@ -300,76 +357,70 @@ const BlockComponent = ({
   };
 
   return (
-    <div 
-      className={`relative group ${isSelected ? 'bg-blue-50' : ''} ${
-        isFocused ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-      }`}
+    <div
+      className={`relative group transition-all duration-200 ${
+        isSelected ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+      } ${isHovered ? 'bg-gray-50' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      draggable={canEdit}
+      onDragStart={onDragStart}
     >
       {/* Block Controls */}
       {canEdit && (isHovered || isFocused) && (
-        <div className="absolute -left-8 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute left-0 top-0 flex items-center space-x-1 -ml-12 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
-            onClick={() => setShowTypeMenu(!showTypeMenu)}
+            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+            onMouseDown={(e) => e.preventDefault()}
           >
-            <GripVerticalIcon className="h-3 w-3" />
+            <GripVerticalIcon className="h-4 w-4" />
           </Button>
           
-          {showTypeMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 w-48">
-              <div className="space-y-1">
-                {[
-                  { type: 'paragraph', label: 'Text', icon: TypeIcon },
-                  { type: 'heading1', label: 'Heading 1', icon: Heading1Icon },
-                  { type: 'heading2', label: 'Heading 2', icon: Heading2Icon },
-                  { type: 'heading3', label: 'Heading 3', icon: Heading3Icon },
-                  { type: 'bulleted_list', label: 'Bulleted List', icon: ListIcon },
-                  { type: 'numbered_list', label: 'Numbered List', icon: ListIcon },
-                  { type: 'checkbox', label: 'To-do', icon: CheckSquareIcon },
-                  { type: 'code', label: 'Code', icon: CodeIcon },
-                  { type: 'quote', label: 'Quote', icon: QuoteIcon },
-                  { type: 'image', label: 'Image', icon: ImageIcon },
-                  { type: 'database', label: 'Database', icon: DatabaseIcon }
-                ].map(({ type, label, icon: Icon }) => (
-                  <button
-                    key={type}
-                    className="flex items-center space-x-2 w-full px-2 py-1 text-left hover:bg-gray-100 rounded"
-                    onClick={() => {
-                      onTypeChange(type);
-                      setShowTypeMenu(false);
-                    }}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm">{label}</span>
-                  </button>
-                ))}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowTypeMenu(!showTypeMenu)}
+            >
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+            
+            {showTypeMenu && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50 min-w-[120px]">
+                <button
+                  onClick={() => onDuplicate()}
+                  className="flex items-center w-full px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  <CopyIcon className="h-3 w-3 mr-2" />
+                  Duplicate
+                </button>
+                <button
+                  onClick={() => onDelete()}
+                  className="flex items-center w-full px-3 py-1 text-sm text-red-600 hover:bg-red-50"
+                >
+                  <TrashIcon className="h-3 w-3 mr-2" />
+                  Delete
+                </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
       {/* Block Content */}
-      <div className="min-h-[40px] flex items-center">
+      <div className="px-2 py-1">
         {renderBlockContent()}
       </div>
 
-      {/* Block Actions */}
-      {canEdit && (isHovered || isFocused) && (
-        <div className="absolute -right-8 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0"
-            onClick={onDelete}
-          >
-            <TrashIcon className="h-3 w-3" />
-          </Button>
-        </div>
+      {/* Click outside to close menu */}
+      {showTypeMenu && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowTypeMenu(false)}
+        />
       )}
     </div>
   );

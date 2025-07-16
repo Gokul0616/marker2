@@ -5,9 +5,11 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Alert, AlertDescription } from '../components/ui/alert';
 import { toast } from 'sonner';
 import MFAVerification from '../components/MFA/MFAVerification';
-import { Eye, EyeOff } from 'lucide-react';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { Eye, EyeOff, AlertCircleIcon } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -16,17 +18,24 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaUserId, setMfaUserId] = useState(null);
-  const { login, verifyMFA } = useAuth();
+  const { login, verifyMFA, error, clearError } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
     setLoading(true);
+    clearError();
     
     const result = await login(email, password);
     
     if (result.success) {
-      toast.success('Login successful!');
+      toast.success('Welcome back!');
       // Redirect to the default Getting Started page for immediate Notion-like experience
       navigate('/page/page1');
     } else if (result.mfaRequired) {
@@ -42,17 +51,22 @@ const LoginPage = () => {
 
   const handleMFASuccess = (response) => {
     setMfaRequired(false);
-    toast.success('Login successful!');
+    toast.success('Welcome back!');
     navigate('/page/page1');
   };
 
   const handleMFACancel = () => {
     setMfaRequired(false);
     setMfaUserId(null);
+    clearError();
   };
 
   const handleRegister = () => {
     navigate('/register');
+  };
+
+  const handleForgotPassword = () => {
+    toast.info('Password reset functionality coming soon!');
   };
 
   if (mfaRequired) {
@@ -75,6 +89,13 @@ const LoginPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert className="mb-4" variant="destructive">
+              <AlertCircleIcon className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -85,8 +106,11 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="Enter your email"
+                disabled={loading}
+                className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -97,36 +121,73 @@ const LoginPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Enter your password"
+                  disabled={loading}
+                  className="pr-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={loading}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <input
+                  id="remember"
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember" className="text-sm text-gray-600">
+                  Remember me
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-blue-600 hover:text-blue-500"
+              >
+                Forgot password?
+              </button>
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? (
+                <LoadingSpinner size="small" text="Signing in..." fullScreen={false} />
+              ) : (
+                'Sign In'
+              )}
             </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <button 
+            
+            <div className="text-center">
+              <span className="text-sm text-gray-600">Don't have an account? </span>
+              <button
+                type="button"
                 onClick={handleRegister}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
               >
                 Sign up
               </button>
-            </p>
-          </div>
-          
-          <div className="mt-4 text-center text-xs text-gray-500">
-            <p>For testing purposes, you can create a new account</p>
-          </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                For testing purposes, you can create a new account
+              </p>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
