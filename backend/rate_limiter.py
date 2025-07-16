@@ -4,7 +4,7 @@ from fastapi import Request, HTTPException, status
 from sqlalchemy.orm import Session
 import redis
 import os
-from .database import get_db, LoginAttempt
+from database import get_db, LoginAttempt
 
 # Redis configuration for rate limiting
 REDIS_URL = os.environ.get('RATE_LIMIT_REDIS_URL', 'redis://localhost:6379')
