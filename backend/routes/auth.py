@@ -5,13 +5,13 @@ from datetime import timedelta
 from typing import Optional
 import uuid
 
-from ..database import get_db, User, create_tables
-from ..auth import (
+from database import get_db, User, create_tables
+from auth import (
     UserCreate, UserLogin, UserResponse, Token, MFASetupResponse, MFAVerifyRequest,
     get_password_hash, authenticate_user, create_access_token, get_current_active_user,
     enable_mfa_for_user, disable_mfa_for_user, verify_backup_code
 )
-from ..rate_limiter import rate_limiter, check_rate_limit_middleware
+from rate_limiter import rate_limiter, check_rate_limit_middleware
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
