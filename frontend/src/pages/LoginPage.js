@@ -27,7 +27,8 @@ const LoginPage = () => {
     
     if (result.success) {
       toast.success('Login successful!');
-      navigate('/dashboard');
+      // Redirect to the default Getting Started page for immediate Notion-like experience
+      navigate('/page/page1');
     } else if (result.mfaRequired) {
       setMfaRequired(true);
       setMfaUserId(result.userId);
