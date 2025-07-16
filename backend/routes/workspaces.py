@@ -5,8 +5,8 @@ from pydantic import BaseModel
 import uuid
 import json
 
-from ..database import get_db, User, Workspace, workspace_members
-from ..auth import get_current_active_user, UserResponse
+from database import get_db, User, Workspace, workspace_members
+from auth import get_current_active_user, UserResponse
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
