@@ -139,7 +139,7 @@ async def create_page(
         )
     
     # Check if user is a member of the workspace
-    from ..database import workspace_members
+    from database import workspace_members
     is_member = db.query(workspace_members).filter(
         workspace_members.c.workspace_id == page_data.workspace_id,
         workspace_members.c.user_id == current_user.id
