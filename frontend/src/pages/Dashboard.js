@@ -16,18 +16,29 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { PlusIcon, DatabaseIcon, FileTextIcon, SettingsIcon } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const { currentWorkspace, getPageTree, createPage } = useWorkspace();
   const { databases, searchResults } = useNotion();
   const [showTemplates, setShowTemplates] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
-      navigate('/');
+    if (!loading && !user) {
+      navigate('/login');
       return;
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
