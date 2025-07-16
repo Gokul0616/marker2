@@ -282,12 +282,17 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Update AuthContext for Backend Integration"
-    - "MFA Components"
-    - "Connect Frontend to Backend APIs"
+    - "Test all clickable functions in Landing Page"
+    - "Test Login/Register page interactions"
+    - "Test Dashboard navigation and functionality"
+    - "Test MFA components and flow"
+    - "Test Sidebar navigation and page creation"
+    - "Test Quick Actions and workspace features"
+    - "Test untested backend APIs (Pages, Workspaces, Databases)"
+    - "Prepare application for Netlify hosting"
   stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  test_all: true
+  test_priority: "comprehensive_ui_testing"
 
 agent_communication:
   - agent: "main"
