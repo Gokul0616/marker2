@@ -4,8 +4,8 @@ from typing import List, Optional
 from pydantic import BaseModel
 import uuid
 
-from ..database import get_db, User
-from ..auth import get_current_active_user, UserResponse, get_password_hash
+from database import get_db, User
+from auth import get_current_active_user, UserResponse, get_password_hash
 
 router = APIRouter(prefix="/users", tags=["users"])
 
