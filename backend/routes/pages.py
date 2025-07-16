@@ -5,8 +5,8 @@ from pydantic import BaseModel
 import uuid
 import json
 
-from ..database import get_db, User, Page, Workspace, page_permissions
-from ..auth import get_current_active_user, UserResponse
+from database import get_db, User, Page, Workspace, page_permissions
+from auth import get_current_active_user, UserResponse
 
 router = APIRouter(prefix="/pages", tags=["pages"])
 
