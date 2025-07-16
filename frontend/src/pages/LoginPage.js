@@ -27,7 +27,7 @@ const LoginPage = () => {
     
     if (result.success) {
       toast.success('Login successful!');
-      navigate('/');
+      navigate('/dashboard');
     } else if (result.mfaRequired) {
       setMfaRequired(true);
       setMfaUserId(result.userId);
