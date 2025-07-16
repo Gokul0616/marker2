@@ -42,7 +42,7 @@ const LoginPage = () => {
   const handleMFASuccess = (response) => {
     setMfaRequired(false);
     toast.success('Login successful!');
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const handleMFACancel = () => {
