@@ -396,17 +396,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test all clickable functions in Landing Page"
-    - "Test Login/Register page interactions"
-    - "Test Dashboard navigation and functionality"
-    - "Test MFA components and flow"
-    - "Test Sidebar navigation and page creation"
-    - "Test Quick Actions and workspace features"
-    - "Test untested backend APIs (Pages, Workspaces, Databases)"
     - "Prepare application for Netlify hosting"
+    - "Optimize build configuration"
+    - "Configure environment variables for production"
   stuck_tasks: []
-  test_all: true
-  test_priority: "comprehensive_ui_testing"
+  test_all: false
+  test_priority: "production_deployment"
 
 agent_communication:
   - agent: "main"
