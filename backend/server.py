@@ -10,8 +10,8 @@ import uuid
 from datetime import datetime
 
 # Import database and authentication
-from .database import create_tables
-from .routes import auth, users, workspaces, pages, databases
+from database import create_tables
+from routes import auth, users, workspaces, pages, databases
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
