@@ -54,7 +54,7 @@ class User(Base):
     workspaces = relationship("Workspace", secondary=workspace_members, back_populates="members")
     owned_workspaces = relationship("Workspace", back_populates="owner")
     pages = relationship("Page", secondary=page_permissions, back_populates="users")
-    owned_pages = relationship("Page", back_populates="created_by_user")
+    owned_pages = relationship("Page", foreign_keys="Page.created_by", back_populates="created_by_user")
     backup_codes = relationship("MFABackupCode", back_populates="user")
     login_attempts = relationship("LoginAttempt", back_populates="user")
 
