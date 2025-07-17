@@ -38,27 +38,31 @@ class RateLimiter:
         """Check if IP is rate limited"""
         ip = self.get_client_ip(request)
         
-        if redis_client:
-            # Use Redis for rate limiting
-            key = self.get_redis_key(ip)
-            attempts = redis_client.get(key)
-            
-            if attempts and int(attempts) >= self.max_attempts:
-                return False
-            
-            return True
-        else:
-            # Fallback to database
-            db = next(get_db())
-            cutoff_time = datetime.utcnow() - timedelta(minutes=self.lockout_duration)
-            
-            recent_attempts = db.query(LoginAttempt).filter(
-                LoginAttempt.ip_address == ip,
-                LoginAttempt.attempted_at >= cutoff_time,
-                LoginAttempt.success == False
-            ).count()
-            
-            return recent_attempts < self.max_attempts
+        try:
+            if redis_client:
+                # Use Redis for rate limiting
+                key = self.get_redis_key(ip)
+                attempts = redis_client.get(key)
+                
+                if attempts and int(attempts) >= self.max_attempts:
+                    return False
+                
+                return True
+        except Exception:
+            # Redis failed, fall back to database
+            pass
+        
+        # Fallback to database
+        db = next(get_db())
+        cutoff_time = datetime.utcnow() - timedelta(minutes=self.lockout_duration)
+        
+        recent_attempts = db.query(LoginAttempt).filter(
+            LoginAttempt.ip_address == ip,
+            LoginAttempt.attempted_at >= cutoff_time,
+            LoginAttempt.success == False
+        ).count()
+        
+        return recent_attempts < self.max_attempts
     
     def record_attempt(self, request: Request, success: bool, user_id: Optional[str] = None):
         """Record a login attempt"""
