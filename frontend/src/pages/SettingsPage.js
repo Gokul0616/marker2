@@ -144,7 +144,7 @@ const SettingsPage = () => {
         settings: workspaceSettings
       };
       
-      await workspaceAPI.updateWorkspace(currentWorkspace.id, updateData);
+      await workspacesAPI.updateWorkspace(currentWorkspace.id, updateData);
       await updateWorkspace(currentWorkspace.id, updateData);
       
       toast.success('Workspace settings updated successfully');
