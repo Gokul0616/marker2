@@ -213,13 +213,14 @@ const SettingsPage = () => {
                 )}
               </div>
             )}
+            </div>
           </div>
-        </div>
-      </div>
+        </header>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="workspace" className="space-y-6">
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-4xl mx-auto">
+            <Tabs defaultValue="workspace" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="workspace">Workspace</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
