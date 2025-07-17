@@ -72,8 +72,63 @@ const SettingsPage = () => {
         language: settings.language || 'en',
         timezone: settings.timezone || 'UTC'
       });
+      
+      // Load trash items
+      loadTrashItems();
     }
   }, [currentWorkspace]);
+
+  const loadTrashItems = async () => {
+    if (!currentWorkspace) return;
+    
+    setLoadingTrash(true);
+    try {
+      const response = await trashAPI.getTrashItems(currentWorkspace.id);
+      setTrashItems(response.items || []);
+    } catch (error) {
+      console.error('Error loading trash items:', error);
+      toast.error('Failed to load trash items');
+    } finally {
+      setLoadingTrash(false);
+    }
+  };
+
+  const handleRestoreItem = async (itemId, itemType) => {
+    try {
+      await trashAPI.restoreItem(itemId, itemType);
+      toast.success(`${itemType} restored successfully`);
+      loadTrashItems();
+    } catch (error) {
+      console.error('Error restoring item:', error);
+      toast.error('Failed to restore item');
+    }
+  };
+
+  const handlePermanentlyDeleteItem = async (itemId, itemType) => {
+    if (window.confirm('Are you sure you want to permanently delete this item? This action cannot be undone.')) {
+      try {
+        await trashAPI.permanentlyDeleteItem(itemId, itemType);
+        toast.success(`${itemType} permanently deleted`);
+        loadTrashItems();
+      } catch (error) {
+        console.error('Error permanently deleting item:', error);
+        toast.error('Failed to permanently delete item');
+      }
+    }
+  };
+
+  const handleEmptyTrash = async () => {
+    if (window.confirm('Are you sure you want to empty the trash? This will permanently delete all items and cannot be undone.')) {
+      try {
+        await trashAPI.emptyTrash(currentWorkspace.id);
+        toast.success('Trash emptied successfully');
+        loadTrashItems();
+      } catch (error) {
+        console.error('Error emptying trash:', error);
+        toast.error('Failed to empty trash');
+      }
+    }
+  };
 
   const handleSaveWorkspaceSettings = async () => {
     if (!currentWorkspace) return;
