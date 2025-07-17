@@ -14,6 +14,7 @@ import MFASetupPage from './pages/MFASetupPage';
 import Dashboard from './pages/Dashboard';
 import PageEditor from './pages/PageEditor';
 import DatabaseView from './pages/DatabaseView';
+import SettingsPage from './pages/SettingsPage';
 import './App.css';
 
 function App() {
