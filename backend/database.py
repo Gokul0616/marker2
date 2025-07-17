@@ -139,9 +139,15 @@ class Database(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Soft delete fields
+    is_deleted = Column(Boolean, default=False)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=True)
+    
     # Relationships
     workspace = relationship("Workspace", back_populates="databases")
     rows = relationship("DatabaseRow", back_populates="database")
+    deleted_by_user = relationship("User", foreign_keys=[deleted_by])
 
 class DatabaseRow(Base):
     __tablename__ = "database_rows"
