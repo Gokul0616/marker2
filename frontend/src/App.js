@@ -74,6 +74,14 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                    <Route
+                      path="/trash"
+                      element={
+                        <ProtectedRoute>
+                          <TrashPage />
+                        </ProtectedRoute>
+                      }
+                    />
                     
                     {/* Fallback Route */}
                     <Route path="*" element={<Navigate to="/" replace />} />
