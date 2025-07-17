@@ -845,9 +845,11 @@ class BackendTester:
             ("MFA Login", self.test_mfa_login),
             ("Rate Limiting", self.test_rate_limiting),
             ("User Management", self.test_user_management),
+            ("Settings Endpoints", self.test_settings_endpoints),
             ("Workspaces API", self.test_workspaces_api),
             ("Pages API", self.test_pages_api),
             ("Databases API", self.test_databases_api),
+            ("Trash Functionality", self.test_trash_functionality),
         ]
         
         results = {}
