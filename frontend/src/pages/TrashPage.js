@@ -10,7 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { 
   TrashIcon, 
-  RestoreIcon, 
+  RotateCcwIcon, 
   FileTextIcon, 
   DatabaseIcon, 
   AlertTriangleIcon,
