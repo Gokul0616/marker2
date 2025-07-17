@@ -60,7 +60,7 @@ const Dashboard = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col ml-64">
         {/* Header */}
         <header className="border-b bg-white px-6 py-4">
           <div className="flex items-center justify-between">
