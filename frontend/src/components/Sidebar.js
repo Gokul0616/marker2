@@ -190,6 +190,10 @@ const Sidebar = () => {
           <SettingsIcon className="h-4 w-4 mr-2" />
           Settings
         </Button>
+        <Button variant="ghost" size="sm" className="w-full justify-start text-left" onClick={() => navigate('/trash')}>
+          <TrashIcon className="h-4 w-4 mr-2" />
+          Trash
+        </Button>
       </div>
 
       <Separator className="mx-2" />
