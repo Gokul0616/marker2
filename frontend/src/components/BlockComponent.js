@@ -600,11 +600,15 @@ const BlockComponent = ({
         {renderBlockContent()}
       </div>
 
-      {/* Click outside to close menu */}
-      {showTypeMenu && (
+      {/* Click outside to close menus */}
+      {(showTypeMenu || showCommandMenu) && (
         <div 
           className="fixed inset-0 z-40" 
-          onClick={() => setShowTypeMenu(false)}
+          onClick={() => {
+            setShowTypeMenu(false);
+            setShowCommandMenu(false);
+            setCommandSearch('');
+          }}
         />
       )}
     </div>
