@@ -258,6 +258,39 @@ export const databasesAPI = {
   },
 };
 
+// Trash API
+export const trashAPI = {
+  getTrashItems: async (workspaceId = null) => {
+    let url = '/trash';
+    if (workspaceId) {
+      url += `?workspace_id=${workspaceId}`;
+    }
+    
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  restoreItem: async (itemId, itemType) => {
+    const response = await api.post(`/trash/${itemId}/restore?item_type=${itemType}`);
+    return response.data;
+  },
+
+  permanentlyDeleteItem: async (itemId, itemType) => {
+    const response = await api.delete(`/trash/${itemId}?item_type=${itemType}`);
+    return response.data;
+  },
+
+  emptyTrash: async (workspaceId = null) => {
+    let url = '/trash/empty';
+    if (workspaceId) {
+      url += `?workspace_id=${workspaceId}`;
+    }
+    
+    const response = await api.post(url);
+    return response.data;
+  },
+};
+
 // Health check
 export const healthAPI = {
   check: async () => {
