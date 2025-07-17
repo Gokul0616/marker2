@@ -81,16 +81,20 @@ class RateLimiter:
         db.commit()
         
         # Update Redis counter
-        if redis_client:
-            key = self.get_redis_key(ip)
-            
-            if success:
-                # Reset counter on successful login
-                redis_client.delete(key)
-            else:
-                # Increment counter on failed login
-                current = redis_client.get(key) or 0
-                redis_client.setex(key, self.lockout_duration * 60, int(current) + 1)
+        try:
+            if redis_client:
+                key = self.get_redis_key(ip)
+                
+                if success:
+                    # Reset counter on successful login
+                    redis_client.delete(key)
+                else:
+                    # Increment counter on failed login
+                    current = redis_client.get(key) or 0
+                    redis_client.setex(key, self.lockout_duration * 60, int(current) + 1)
+        except Exception:
+            # Redis failed, database fallback is already handled above
+            pass
     
     def reset_attempts(self, request: Request):
         """Reset login attempts for IP"""
