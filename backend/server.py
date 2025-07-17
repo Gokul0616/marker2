@@ -38,6 +38,7 @@ api_router.include_router(users.router)
 api_router.include_router(workspaces.router)
 api_router.include_router(pages.router)
 api_router.include_router(databases.router)
+api_router.include_router(trash.router)
 
 # Include the router in the main app
 app.include_router(api_router)
