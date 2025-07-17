@@ -93,7 +93,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+    <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col h-screen fixed left-0 top-0 z-10">
       {/* Workspace Header */}
       <div className="p-4 border-b border-gray-200">
         <div 
