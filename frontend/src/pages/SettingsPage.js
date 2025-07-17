@@ -26,7 +26,7 @@ import {
   UserPlusIcon,
   UserMinusIcon,
   CrownIcon,
-  RestoreIcon,
+  RotateCcwIcon,
   XIcon,
   AlertTriangleIcon
 } from 'lucide-react';
