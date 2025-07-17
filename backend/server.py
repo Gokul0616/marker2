@@ -9,8 +9,7 @@ from typing import List
 import uuid
 from datetime import datetime
 
-# Import database and authentication
-from database import create_tables
+# Import routes
 from routes import auth, users, workspaces, pages, databases, trash
 
 ROOT_DIR = Path(__file__).parent
@@ -21,11 +20,6 @@ app = FastAPI(title="Notion Clone API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
-
-# Create database tables on startup
-@app.on_event("startup")
-async def startup_event():
-    create_tables()
 
 # Health check endpoint
 @api_router.get("/health")
