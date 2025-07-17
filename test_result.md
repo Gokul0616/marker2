@@ -210,6 +210,18 @@ backend:
         agent: "testing"
         comment: "✅ Databases API fully functional. All CRUD operations tested successfully: Create database with properties and views, Get databases with workspace filtering, Get single database with access control, Update database schema and views, Delete database (creator/owner only). Database rows CRUD fully working: Create/Read/Update/Delete rows with proper validation. Properties and views stored as JSON and properly serialized. Workspace membership validation working correctly."
 
+  - task: "Comprehensive Backend Testing with User Credentials"
+    implemented: true
+    working: true
+    file: "backend_test.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE BACKEND TESTING COMPLETED! All 13 backend tests passed successfully using user-provided credentials (test@example.com): 1) Database Setup - PostgreSQL healthy, 2) User Registration - Test user created successfully, 3) User Login - JWT authentication working, 4) JWT Authentication - Protected endpoints accessible, 5) MFA Setup - 8 backup codes generated, 6) MFA Login - Backup code verification successful, 7) Rate Limiting - 3 attempts per IP enforced with database fallback, 8) User Management - Profile updates working, 9) Settings Endpoints - User settings functional, 10) Workspaces API - Full CRUD tested, 11) Pages API - Complete page management with soft delete, 12) Databases API - Database and row management with soft delete, 13) Trash Functionality - Soft delete, trash retrieval, restore, and permanent delete all working. Fixed SQLAlchemy relationship issues and Redis fallback mechanism. Backend fully functional."
+
 frontend:
   - task: "Update AuthContext for Backend Integration"
     implemented: true
