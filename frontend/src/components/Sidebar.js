@@ -186,7 +186,7 @@ const Sidebar = () => {
           Updates
           <Badge variant="secondary" className="ml-auto text-xs">2</Badge>
         </Button>
-        <Button variant="ghost" size="sm" className="w-full justify-start text-left">
+        <Button variant="ghost" size="sm" className="w-full justify-start text-left" onClick={() => navigate('/settings')}>
           <SettingsIcon className="h-4 w-4 mr-2" />
           Settings
         </Button>
