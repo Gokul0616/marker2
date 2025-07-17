@@ -162,7 +162,7 @@ const SettingsPage = () => {
     if (window.confirm('Are you sure you want to delete this workspace? This action cannot be undone.')) {
       setLoading(true);
       try {
-        await workspaceAPI.deleteWorkspace(currentWorkspace.id);
+        await workspacesAPI.deleteWorkspace(currentWorkspace.id);
         toast.success('Workspace deleted successfully');
         navigate('/dashboard');
       } catch (error) {
