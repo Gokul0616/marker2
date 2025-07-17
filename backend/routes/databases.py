@@ -242,8 +242,10 @@ async def delete_database(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Delete database"""
-    database = db.query(Database).filter(Database.id == database_id).first()
+    """Delete database (move to trash)"""
+    from datetime import datetime
+    
+    database = db.query(Database).filter(Database.id == database_id, Database.is_deleted == False).first()
     if not database:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -258,10 +260,15 @@ async def delete_database(
             detail="Only database creator or workspace owner can delete database"
         )
     
-    db.delete(database)
+    # Soft delete - move to trash
+    database.is_deleted = True
+    database.deleted_at = datetime.utcnow()
+    database.deleted_by = current_user.id
+    database.updated_at = datetime.utcnow()
+    
     db.commit()
     
-    return {"message": "Database deleted successfully"}
+    return {"message": "Database moved to trash successfully"}
 
 # Database rows endpoints
 @router.get("/{database_id}/rows", response_model=List[DatabaseRowResponse])
