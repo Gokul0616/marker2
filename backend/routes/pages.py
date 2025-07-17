@@ -254,8 +254,10 @@ async def delete_page(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Delete page"""
-    page = db.query(Page).filter(Page.id == page_id).first()
+    """Delete page (move to trash)"""
+    from datetime import datetime
+    
+    page = db.query(Page).filter(Page.id == page_id, Page.is_deleted == False).first()
     if not page:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -275,10 +277,15 @@ async def delete_page(
             detail="Only page owner can delete page"
         )
     
-    db.delete(page)
+    # Soft delete - move to trash
+    page.is_deleted = True
+    page.deleted_at = datetime.utcnow()
+    page.deleted_by = current_user.id
+    page.updated_at = datetime.utcnow()
+    
     db.commit()
     
-    return {"message": "Page deleted successfully"}
+    return {"message": "Page moved to trash successfully"}
 
 @router.post("/{page_id}/permissions/{user_id}")
 async def grant_page_permission(
