@@ -30,7 +30,7 @@ import {
   XIcon,
   AlertTriangleIcon
 } from 'lucide-react';
-import { workspaceAPI, trashAPI } from '../services/api';
+import { workspacesAPI, trashAPI } from '../services/api';
 import MFASettings from '../components/MFA/MFASettings';
 
 const SettingsPage = () => {
