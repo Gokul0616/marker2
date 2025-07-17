@@ -25,7 +25,10 @@ import {
   SaveIcon,
   UserPlusIcon,
   UserMinusIcon,
-  CrownIcon
+  CrownIcon,
+  RestoreIcon,
+  XIcon,
+  AlertTriangleIcon
 } from 'lucide-react';
 import { workspaceAPI, trashAPI } from '../services/api';
 import MFASettings from '../components/MFA/MFASettings';
