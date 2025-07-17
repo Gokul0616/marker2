@@ -46,7 +46,8 @@ async def get_pages(
 ):
     """Get pages for current user"""
     query = db.query(Page).join(page_permissions).filter(
-        page_permissions.c.user_id == current_user.id
+        page_permissions.c.user_id == current_user.id,
+        Page.is_deleted == False  # Exclude deleted pages
     )
     
     if workspace_id:
