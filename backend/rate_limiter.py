@@ -108,21 +108,26 @@ class RateLimiter:
         """Get remaining attempts for IP"""
         ip = self.get_client_ip(request)
         
-        if redis_client:
-            key = self.get_redis_key(ip)
-            attempts = redis_client.get(key)
-            return self.max_attempts - int(attempts or 0)
-        else:
-            db = next(get_db())
-            cutoff_time = datetime.utcnow() - timedelta(minutes=self.lockout_duration)
-            
-            recent_attempts = db.query(LoginAttempt).filter(
-                LoginAttempt.ip_address == ip,
-                LoginAttempt.attempted_at >= cutoff_time,
-                LoginAttempt.success == False
-            ).count()
-            
-            return self.max_attempts - recent_attempts
+        try:
+            if redis_client:
+                key = self.get_redis_key(ip)
+                attempts = redis_client.get(key)
+                return self.max_attempts - int(attempts or 0)
+        except Exception:
+            # Redis failed, fall back to database
+            pass
+        
+        # Fallback to database
+        db = next(get_db())
+        cutoff_time = datetime.utcnow() - timedelta(minutes=self.lockout_duration)
+        
+        recent_attempts = db.query(LoginAttempt).filter(
+            LoginAttempt.ip_address == ip,
+            LoginAttempt.attempted_at >= cutoff_time,
+            LoginAttempt.success == False
+        ).count()
+        
+        return self.max_attempts - recent_attempts
 
 # Global rate limiter instance
 rate_limiter = RateLimiter()
