@@ -58,7 +58,7 @@ async def get_databases(
     db: Session = Depends(get_db)
 ):
     """Get databases for current user"""
-    query = db.query(Database)
+    query = db.query(Database).filter(Database.is_deleted == False)
     
     if workspace_id:
         # Check if user is a member of the workspace
