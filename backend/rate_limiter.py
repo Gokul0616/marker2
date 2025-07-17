@@ -100,9 +100,13 @@ class RateLimiter:
         """Reset login attempts for IP"""
         ip = self.get_client_ip(request)
         
-        if redis_client:
-            key = self.get_redis_key(ip)
-            redis_client.delete(key)
+        try:
+            if redis_client:
+                key = self.get_redis_key(ip)
+                redis_client.delete(key)
+        except Exception:
+            # Redis failed, database cleanup would happen naturally with time-based queries
+            pass
     
     def get_remaining_attempts(self, request: Request) -> int:
         """Get remaining attempts for IP"""
