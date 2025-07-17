@@ -42,6 +42,8 @@ const BlockComponent = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showTypeMenu, setShowTypeMenu] = useState(false);
+  const [showCommandMenu, setShowCommandMenu] = useState(false);
+  const [commandSearch, setCommandSearch] = useState('');
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -52,12 +54,165 @@ const BlockComponent = ({
 
   const handleContentChange = (e) => {
     const value = e.target.value;
+    
+    // Check if user typed "/" to show command menu
+    if (value === '/' && !showCommandMenu) {
+      setShowCommandMenu(true);
+      setCommandSearch('');
+      return;
+    }
+    
+    // If command menu is open and user is typing
+    if (showCommandMenu && value.startsWith('/')) {
+      setCommandSearch(value.slice(1));
+      return;
+    }
+    
+    // If command menu is open but user cleared the /
+    if (showCommandMenu && !value.startsWith('/')) {
+      setShowCommandMenu(false);
+      setCommandSearch('');
+    }
+    
     onChange(value);
     
     // Update cursor position for collaboration
     if (onCursorMove) {
       onCursorMove(e.target.selectionStart || 0);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (showCommandMenu) {
+      if (e.key === 'Escape') {
+        setShowCommandMenu(false);
+        setCommandSearch('');
+        return;
+      }
+      
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const selectedCommand = getFilteredCommands()[0];
+        if (selectedCommand) {
+          executeCommand(selectedCommand);
+        }
+        return;
+      }
+    }
+    
+    if (onKeyDown) {
+      onKeyDown(e);
+    }
+  };
+
+  const executeCommand = (command) => {
+    if (onTypeChange) {
+      onTypeChange(command.type);
+    }
+    setShowCommandMenu(false);
+    setCommandSearch('');
+  };
+
+  const getCommands = () => [
+    {
+      id: 'paragraph',
+      type: 'paragraph',
+      title: 'Text',
+      description: 'Just start writing with plain text',
+      icon: TypeIcon,
+      keywords: ['text', 'paragraph', 'p']
+    },
+    {
+      id: 'heading1',
+      type: 'heading1',
+      title: 'Heading 1',
+      description: 'Big section heading',
+      icon: Heading1Icon,
+      keywords: ['heading', 'h1', 'title']
+    },
+    {
+      id: 'heading2',
+      type: 'heading2',
+      title: 'Heading 2',
+      description: 'Medium section heading',
+      icon: Heading2Icon,
+      keywords: ['heading', 'h2', 'subtitle']
+    },
+    {
+      id: 'heading3',
+      type: 'heading3',
+      title: 'Heading 3',
+      description: 'Small section heading',
+      icon: Heading3Icon,
+      keywords: ['heading', 'h3']
+    },
+    {
+      id: 'bulleted_list',
+      type: 'bulleted_list',
+      title: 'Bulleted List',
+      description: 'Create a simple bulleted list',
+      icon: ListIcon,
+      keywords: ['list', 'bullet', 'ul']
+    },
+    {
+      id: 'numbered_list',
+      type: 'numbered_list',
+      title: 'Numbered List',
+      description: 'Create a list with numbering',
+      icon: ListIcon,
+      keywords: ['list', 'number', 'ol', 'ordered']
+    },
+    {
+      id: 'checkbox',
+      type: 'checkbox',
+      title: 'To-do List',
+      description: 'Track tasks with a to-do list',
+      icon: CheckSquareIcon,
+      keywords: ['todo', 'task', 'check', 'checkbox']
+    },
+    {
+      id: 'quote',
+      type: 'quote',
+      title: 'Quote',
+      description: 'Capture a quote',
+      icon: QuoteIcon,
+      keywords: ['quote', 'blockquote', 'cite']
+    },
+    {
+      id: 'code',
+      type: 'code',
+      title: 'Code',
+      description: 'Capture a code snippet',
+      icon: CodeIcon,
+      keywords: ['code', 'snippet', 'programming']
+    },
+    {
+      id: 'image',
+      type: 'image',
+      title: 'Image',
+      description: 'Upload or embed an image',
+      icon: ImageIcon,
+      keywords: ['image', 'picture', 'photo', 'img']
+    },
+    {
+      id: 'database',
+      type: 'database',
+      title: 'Database',
+      description: 'Create a database',
+      icon: DatabaseIcon,
+      keywords: ['database', 'table', 'data', 'db']
+    }
+  ];
+
+  const getFilteredCommands = () => {
+    const commands = getCommands();
+    if (!commandSearch) return commands;
+    
+    return commands.filter(command => 
+      command.title.toLowerCase().includes(commandSearch.toLowerCase()) ||
+      command.description.toLowerCase().includes(commandSearch.toLowerCase()) ||
+      command.keywords.some(keyword => keyword.toLowerCase().includes(commandSearch.toLowerCase()))
+    );
   };
 
   const handleCheckboxChange = (checked) => {
