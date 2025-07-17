@@ -106,7 +106,7 @@ async def get_database(
     db: Session = Depends(get_db)
 ):
     """Get database by ID"""
-    database = db.query(Database).filter(Database.id == database_id).first()
+    database = db.query(Database).filter(Database.id == database_id, Database.is_deleted == False).first()
     if not database:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
