@@ -593,7 +593,7 @@ const SettingsPage = () => {
                             onClick={() => handleRestoreItem(item.id, item.type)}
                             className="text-green-600 hover:text-green-700"
                           >
-                            <RestoreIcon className="h-4 w-4 mr-1" />
+                            <RotateCcwIcon className="h-4 w-4 mr-1" />
                             Restore
                           </Button>
                           <Button
