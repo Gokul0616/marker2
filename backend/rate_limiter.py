@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import Request, HTTPException, status
-from sqlalchemy.orm import Session
 import redis
 import os
-from database import get_db, LoginAttempt
+from database import record_login_attempt, get_recent_login_attempts
 
 # Redis configuration for rate limiting
 REDIS_URL = os.environ.get('RATE_LIMIT_REDIS_URL', 'redis://localhost:6379')
@@ -53,32 +52,17 @@ class RateLimiter:
             pass
         
         # Fallback to database
-        db = next(get_db())
-        cutoff_time = datetime.utcnow() - timedelta(minutes=self.lockout_duration)
+        recent_attempts = get_recent_login_attempts(ip, self.lockout_duration)
+        failed_attempts = [attempt for attempt in recent_attempts if not attempt['successful']]
         
-        recent_attempts = db.query(LoginAttempt).filter(
-            LoginAttempt.ip_address == ip,
-            LoginAttempt.attempted_at >= cutoff_time,
-            LoginAttempt.success == False
-        ).count()
-        
-        return recent_attempts < self.max_attempts
+        return len(failed_attempts) < self.max_attempts
     
-    def record_attempt(self, request: Request, success: bool, user_id: Optional[str] = None):
+    def record_attempt(self, request: Request, success: bool, user_email: Optional[str] = None):
         """Record a login attempt"""
         ip = self.get_client_ip(request)
-        user_agent = request.headers.get('User-Agent', '')
         
         # Record in database
-        db = next(get_db())
-        attempt = LoginAttempt(
-            user_id=user_id,
-            ip_address=ip,
-            user_agent=user_agent,
-            success=success
-        )
-        db.add(attempt)
-        db.commit()
+        record_login_attempt(ip, user_email, success)
         
         # Update Redis counter
         try:
@@ -122,16 +106,10 @@ class RateLimiter:
             pass
         
         # Fallback to database
-        db = next(get_db())
-        cutoff_time = datetime.utcnow() - timedelta(minutes=self.lockout_duration)
+        recent_attempts = get_recent_login_attempts(ip, self.lockout_duration)
+        failed_attempts = [attempt for attempt in recent_attempts if not attempt['successful']]
         
-        recent_attempts = db.query(LoginAttempt).filter(
-            LoginAttempt.ip_address == ip,
-            LoginAttempt.attempted_at >= cutoff_time,
-            LoginAttempt.success == False
-        ).count()
-        
-        return self.max_attempts - recent_attempts
+        return self.max_attempts - len(failed_attempts)
 
 # Global rate limiter instance
 rate_limiter = RateLimiter()
