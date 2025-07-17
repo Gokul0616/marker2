@@ -27,7 +27,7 @@ import {
   UserMinusIcon,
   CrownIcon
 } from 'lucide-react';
-import { workspaceAPI } from '../services/api';
+import { workspaceAPI, trashAPI } from '../services/api';
 import MFASettings from '../components/MFA/MFASettings';
 
 const SettingsPage = () => {
@@ -35,6 +35,8 @@ const SettingsPage = () => {
   const { user } = useAuth();
   const { currentWorkspace, updateWorkspace } = useWorkspace();
   const [loading, setLoading] = useState(false);
+  const [trashItems, setTrashItems] = useState([]);
+  const [loadingTrash, setLoadingTrash] = useState(false);
   const [workspaceSettings, setWorkspaceSettings] = useState({
     theme: 'light',
     permissions: 'private',
