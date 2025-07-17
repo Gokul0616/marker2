@@ -121,7 +121,7 @@ class Page(Base):
     
     # Relationships
     workspace = relationship("Workspace", back_populates="pages")
-    created_by_user = relationship("User", back_populates="owned_pages")
+    created_by_user = relationship("User", foreign_keys=[created_by], back_populates="owned_pages")
     users = relationship("User", secondary=page_permissions, back_populates="pages")
     parent = relationship("Page", remote_side=[id])
     children = relationship("Page")
