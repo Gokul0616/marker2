@@ -26,12 +26,16 @@ API_BASE = f"{BACKEND_URL}/api"
 class BackendTester:
     def __init__(self):
         self.session = requests.Session()
-        self.test_user_email = "bob.smith@example.com"  # Different user to avoid rate limiting
-        self.test_user_password = "SecurePass456!"
-        self.test_user_name = "Bob Smith"
+        # Use the test credentials provided by the user
+        self.test_user_email = "test@example.com"
+        self.test_user_password = "TestPassword123!@#"
+        self.test_user_name = "Test User"
         self.auth_token = None
         self.user_id = None
         self.backup_codes = []
+        self.test_workspace_id = None
+        self.test_page_id = None
+        self.test_database_id = None
         
     def log_test(self, test_name, success, message=""):
         status = "✅" if success else "❌"
