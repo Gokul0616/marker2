@@ -619,6 +619,8 @@ const SettingsPage = () => {
             </Card>
           </TabsContent>
         </Tabs>
+          </div>
+        </main>
       </div>
     </div>
   );
