@@ -114,12 +114,18 @@ class Page(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Soft delete fields
+    is_deleted = Column(Boolean, default=False)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=True)
+    
     # Relationships
     workspace = relationship("Workspace", back_populates="pages")
     created_by_user = relationship("User", back_populates="owned_pages")
     users = relationship("User", secondary=page_permissions, back_populates="pages")
     parent = relationship("Page", remote_side=[id])
     children = relationship("Page")
+    deleted_by_user = relationship("User", foreign_keys=[deleted_by])
 
 class Database(Base):
     __tablename__ = "databases"
