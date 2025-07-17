@@ -65,6 +65,14 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute>
+                          <SettingsPage />
+                        </ProtectedRoute>
+                      }
+                    />
                     
                     {/* Fallback Route */}
                     <Route path="*" element={<Navigate to="/" replace />} />
