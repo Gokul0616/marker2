@@ -231,7 +231,7 @@ const TrashPage = () => {
                             size="sm"
                             onClick={() => handleRestore(item.id, item.type)}
                           >
-                            <RestoreIcon className="h-4 w-4 mr-2" />
+                            <RotateCcwIcon className="h-4 w-4 mr-2" />
                             Restore
                           </Button>
                           <Button
