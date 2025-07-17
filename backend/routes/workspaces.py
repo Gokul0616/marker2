@@ -1,60 +1,69 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 import uuid
-import json
 
-from database import get_db, User, Workspace, workspace_members
+from database import (
+    get_user_workspaces, get_workspace_by_id, create_workspace,
+    update_workspace, delete_workspace, get_user_by_id
+)
 from auth import get_current_active_user, UserResponse
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
 class WorkspaceCreate(BaseModel):
     name: str
-    icon: Optional[str] = "📁"
-    settings: Optional[dict] = {}
+    icon: str = '📁'
+    description: Optional[str] = None
 
 class WorkspaceUpdate(BaseModel):
     name: Optional[str] = None
     icon: Optional[str] = None
+    description: Optional[str] = None
     settings: Optional[dict] = None
 
 class WorkspaceResponse(BaseModel):
     id: str
     name: str
     icon: str
+    description: Optional[str] = None
     owner_id: str
-    settings: dict
+    members: List[dict] = []
+    settings: dict = {}
     created_at: str
-    updated_at: str
-    members: List[UserResponse]
-    
-    class Config:
-        from_attributes = True
+    updated_at: Optional[str] = None
 
 @router.get("/", response_model=List[WorkspaceResponse])
-async def get_user_workspaces(
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Get all workspaces for current user"""
-    workspaces = db.query(Workspace).join(workspace_members).filter(
-        workspace_members.c.user_id == current_user.id
-    ).all()
+async def get_workspaces(current_user: dict = Depends(get_current_active_user)):
+    """Get current user's workspaces"""
+    workspaces = get_user_workspaces(current_user['id'])
     
     result = []
-    for workspace in workspaces:
-        members = [UserResponse.from_orm(member) for member in workspace.members]
+    for ws in workspaces:
+        # Get member details
+        members = []
+        for member in ws.get('members', []):
+            user = get_user_by_id(member.get('user_id'))
+            if user:
+                members.append({
+                    'id': user['id'],
+                    'name': user['name'],
+                    'email': user['email'],
+                    'avatar': user.get('avatar'),
+                    'color': user.get('color', '#3b82f6'),
+                    'role': member.get('role', 'member')
+                })
+        
         result.append(WorkspaceResponse(
-            id=str(workspace.id),
-            name=workspace.name,
-            icon=workspace.icon,
-            owner_id=str(workspace.owner_id),
-            settings=json.loads(workspace.settings or "{}"),
-            created_at=workspace.created_at.isoformat(),
-            updated_at=workspace.updated_at.isoformat(),
-            members=members
+            id=ws['id'],
+            name=ws['name'],
+            icon=ws['icon'],
+            description=ws.get('description'),
+            owner_id=ws['owner_id'],
+            members=members,
+            settings=ws.get('settings', {}),
+            created_at=ws['created_at'],
+            updated_at=ws.get('updated_at')
         ))
     
     return result
@@ -62,91 +71,96 @@ async def get_user_workspaces(
 @router.get("/{workspace_id}", response_model=WorkspaceResponse)
 async def get_workspace(
     workspace_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_active_user)
 ):
     """Get workspace by ID"""
-    workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
+    workspace = get_workspace_by_id(workspace_id)
     if not workspace:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Workspace not found"
         )
     
-    # Check if user is a member
-    is_member = db.query(workspace_members).filter(
-        workspace_members.c.workspace_id == workspace_id,
-        workspace_members.c.user_id == current_user.id
-    ).first()
+    # Check if user has access
+    user_workspaces = get_user_workspaces(current_user['id'])
+    workspace_ids = [ws['id'] for ws in user_workspaces]
     
-    if not is_member:
+    if workspace_id not in workspace_ids:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not a member of this workspace"
+            detail="Access denied"
         )
     
-    members = [UserResponse.from_orm(member) for member in workspace.members]
+    # Get member details
+    members = []
+    for member in workspace.get('members', []):
+        user = get_user_by_id(member.get('user_id'))
+        if user:
+            members.append({
+                'id': user['id'],
+                'name': user['name'],
+                'email': user['email'],
+                'avatar': user.get('avatar'),
+                'color': user.get('color', '#3b82f6'),
+                'role': member.get('role', 'member')
+            })
+    
     return WorkspaceResponse(
-        id=str(workspace.id),
-        name=workspace.name,
-        icon=workspace.icon,
-        owner_id=str(workspace.owner_id),
-        settings=json.loads(workspace.settings or "{}"),
-        created_at=workspace.created_at.isoformat(),
-        updated_at=workspace.updated_at.isoformat(),
-        members=members
+        id=workspace['id'],
+        name=workspace['name'],
+        icon=workspace['icon'],
+        description=workspace.get('description'),
+        owner_id=workspace['owner_id'],
+        members=members,
+        settings=workspace.get('settings', {}),
+        created_at=workspace['created_at'],
+        updated_at=workspace.get('updated_at')
     )
 
 @router.post("/", response_model=WorkspaceResponse)
-async def create_workspace(
+async def create_workspace_endpoint(
     workspace_data: WorkspaceCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_active_user)
 ):
     """Create a new workspace"""
-    workspace = Workspace(
-        id=uuid.uuid4(),
-        name=workspace_data.name,
-        icon=workspace_data.icon,
-        owner_id=current_user.id,
-        settings=json.dumps(workspace_data.settings)
-    )
+    workspace_doc = {
+        'name': workspace_data.name,
+        'icon': workspace_data.icon,
+        'description': workspace_data.description,
+        'owner_id': current_user['id'],
+        'members': [{'user_id': current_user['id'], 'role': 'owner'}],
+        'settings': {}
+    }
     
-    db.add(workspace)
-    db.commit()
-    db.refresh(workspace)
+    workspace = create_workspace(workspace_doc)
     
-    # Add creator as member
-    from sqlalchemy import insert
-    stmt = insert(workspace_members).values(
-        workspace_id=workspace.id,
-        user_id=current_user.id,
-        role="owner"
-    )
-    db.execute(stmt)
-    db.commit()
-    
-    members = [UserResponse.from_orm(current_user)]
     return WorkspaceResponse(
-        id=str(workspace.id),
-        name=workspace.name,
-        icon=workspace.icon,
-        owner_id=str(workspace.owner_id),
-        settings=json.loads(workspace.settings or "{}"),
-        created_at=workspace.created_at.isoformat(),
-        updated_at=workspace.updated_at.isoformat(),
-        members=members
+        id=workspace['id'],
+        name=workspace['name'],
+        icon=workspace['icon'],
+        description=workspace.get('description'),
+        owner_id=workspace['owner_id'],
+        members=[{
+            'id': current_user['id'],
+            'name': current_user['name'],
+            'email': current_user['email'],
+            'avatar': current_user.get('avatar'),
+            'color': current_user.get('color', '#3b82f6'),
+            'role': 'owner'
+        }],
+        settings=workspace.get('settings', {}),
+        created_at=workspace['created_at'],
+        updated_at=workspace.get('updated_at')
     )
 
 @router.put("/{workspace_id}", response_model=WorkspaceResponse)
-async def update_workspace(
+async def update_workspace_endpoint(
     workspace_id: str,
-    workspace_update: WorkspaceUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    workspace_data: WorkspaceUpdate,
+    current_user: dict = Depends(get_current_active_user)
 ):
     """Update workspace"""
-    workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
+    workspace = get_workspace_by_id(workspace_id)
     if not workspace:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -154,42 +168,67 @@ async def update_workspace(
         )
     
     # Check if user is owner
-    if workspace.owner_id != current_user.id:
+    if workspace['owner_id'] != current_user['id']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only workspace owner can update workspace"
         )
     
-    if workspace_update.name is not None:
-        workspace.name = workspace_update.name
-    if workspace_update.icon is not None:
-        workspace.icon = workspace_update.icon
-    if workspace_update.settings is not None:
-        workspace.settings = json.dumps(workspace_update.settings)
+    # Prepare update data
+    update_data = {}
+    if workspace_data.name is not None:
+        update_data['name'] = workspace_data.name
+    if workspace_data.icon is not None:
+        update_data['icon'] = workspace_data.icon
+    if workspace_data.description is not None:
+        update_data['description'] = workspace_data.description
+    if workspace_data.settings is not None:
+        update_data['settings'] = workspace_data.settings
     
-    db.commit()
-    db.refresh(workspace)
+    # Update workspace
+    success = update_workspace(workspace_id, update_data)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to update workspace"
+        )
     
-    members = [UserResponse.from_orm(member) for member in workspace.members]
+    # Return updated workspace
+    updated_workspace = get_workspace_by_id(workspace_id)
+    
+    # Get member details
+    members = []
+    for member in updated_workspace.get('members', []):
+        user = get_user_by_id(member.get('user_id'))
+        if user:
+            members.append({
+                'id': user['id'],
+                'name': user['name'],
+                'email': user['email'],
+                'avatar': user.get('avatar'),
+                'color': user.get('color', '#3b82f6'),
+                'role': member.get('role', 'member')
+            })
+    
     return WorkspaceResponse(
-        id=str(workspace.id),
-        name=workspace.name,
-        icon=workspace.icon,
-        owner_id=str(workspace.owner_id),
-        settings=json.loads(workspace.settings or "{}"),
-        created_at=workspace.created_at.isoformat(),
-        updated_at=workspace.updated_at.isoformat(),
-        members=members
+        id=updated_workspace['id'],
+        name=updated_workspace['name'],
+        icon=updated_workspace['icon'],
+        description=updated_workspace.get('description'),
+        owner_id=updated_workspace['owner_id'],
+        members=members,
+        settings=updated_workspace.get('settings', {}),
+        created_at=updated_workspace['created_at'],
+        updated_at=updated_workspace.get('updated_at')
     )
 
 @router.delete("/{workspace_id}")
-async def delete_workspace(
+async def delete_workspace_endpoint(
     workspace_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_active_user)
 ):
     """Delete workspace"""
-    workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
+    workspace = get_workspace_by_id(workspace_id)
     if not workspace:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -197,113 +236,18 @@ async def delete_workspace(
         )
     
     # Check if user is owner
-    if workspace.owner_id != current_user.id:
+    if workspace['owner_id'] != current_user['id']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only workspace owner can delete workspace"
         )
     
-    db.delete(workspace)
-    db.commit()
+    # Delete workspace
+    success = delete_workspace(workspace_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to delete workspace"
+        )
     
     return {"message": "Workspace deleted successfully"}
-
-@router.post("/{workspace_id}/members/{user_id}")
-async def add_member(
-    workspace_id: str,
-    user_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Add member to workspace"""
-    workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
-    if not workspace:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workspace not found"
-        )
-    
-    # Check if user is owner
-    if workspace.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only workspace owner can add members"
-        )
-    
-    # Check if user exists
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Check if user is already a member
-    existing_member = db.query(workspace_members).filter(
-        workspace_members.c.workspace_id == workspace_id,
-        workspace_members.c.user_id == user_id
-    ).first()
-    
-    if existing_member:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User is already a member"
-        )
-    
-    # Add member
-    from sqlalchemy import insert
-    stmt = insert(workspace_members).values(
-        workspace_id=workspace_id,
-        user_id=user_id,
-        role="member"
-    )
-    db.execute(stmt)
-    db.commit()
-    
-    return {"message": "Member added successfully"}
-
-@router.delete("/{workspace_id}/members/{user_id}")
-async def remove_member(
-    workspace_id: str,
-    user_id: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Remove member from workspace"""
-    workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
-    if not workspace:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workspace not found"
-        )
-    
-    # Check if user is owner
-    if workspace.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only workspace owner can remove members"
-        )
-    
-    # Can't remove owner
-    if user_id == str(workspace.owner_id):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot remove workspace owner"
-        )
-    
-    # Remove member
-    from sqlalchemy import delete
-    stmt = delete(workspace_members).where(
-        workspace_members.c.workspace_id == workspace_id,
-        workspace_members.c.user_id == user_id
-    )
-    result = db.execute(stmt)
-    db.commit()
-    
-    if result.rowcount == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Member not found"
-        )
-    
-    return {"message": "Member removed successfully"}

@@ -1,29 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer
-from sqlalchemy.orm import Session
 from datetime import timedelta
 from typing import Optional
 import uuid
 
-from database import get_db, User, create_tables
+from database import (
+    get_user_by_email, get_user_by_id, create_user, update_user,
+    record_login_attempt, get_recent_login_attempts
+)
 from auth import (
     UserCreate, UserLogin, UserResponse, Token, MFASetupResponse, MFAVerifyRequest,
     get_password_hash, authenticate_user, create_access_token, get_current_active_user,
-    enable_mfa_for_user, disable_mfa_for_user, verify_backup_code
+    enable_mfa_for_user, disable_mfa_for_user, verify_backup_code_for_user
 )
 from rate_limiter import rate_limiter, check_rate_limit_middleware
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 @router.post("/register", response_model=UserResponse)
-async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+async def register(user_data: UserCreate):
     """Register a new user"""
-    # Create tables if they don't exist
-    create_tables()
-    
     # Check if user already exists
-    db_user = db.query(User).filter(User.email == user_data.email).first()
-    if db_user:
+    existing_user = get_user_by_email(user_data.email)
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
@@ -31,102 +30,51 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     
     # Create new user
     hashed_password = get_password_hash(user_data.password)
-    db_user = User(
-        id=uuid.uuid4(),
-        name=user_data.name,
-        email=user_data.email,
-        hashed_password=hashed_password,
-        is_active=True,
-        is_verified=True  # For demo purposes
-    )
+    user_doc = {
+        'name': user_data.name,
+        'email': user_data.email,
+        'hashed_password': hashed_password,
+        'is_active': True,
+        'is_verified': True  # For demo purposes
+    }
     
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    db_user = create_user(user_doc)
     
     return UserResponse.from_orm(db_user)
 
 @router.post("/login", response_model=Token)
-async def login(request: Request, user_data: UserLogin, db: Session = Depends(get_db)):
-    """Login user"""
+async def login(request: Request, user_data: UserLogin):
+    """Login user and return access token"""
+    
+    # Get client IP
+    client_ip = request.client.host
+    
     # Check rate limiting
-    check_rate_limit_middleware(request)
+    recent_attempts = get_recent_login_attempts(client_ip, 30)
+    failed_attempts = [attempt for attempt in recent_attempts if not attempt['successful']]
+    
+    if len(failed_attempts) >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed login attempts. Please try again later."
+        )
     
     # Authenticate user
-    user = authenticate_user(db, user_data.email, user_data.password)
+    user = authenticate_user(user_data.email, user_data.password)
+    
     if not user:
         # Record failed attempt
-        rate_limiter.record_attempt(request, False)
+        record_login_attempt(client_ip, user_data.email, successful=False)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="Incorrect email or password"
         )
-    
-    # Check if user is active
-    if not user.is_active:
-        rate_limiter.record_attempt(request, False)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is deactivated"
-        )
-    
-    # If MFA is enabled, require backup code verification
-    if user.mfa_enabled:
-        # Record successful password verification but don't complete login yet
-        rate_limiter.record_attempt(request, True, str(user.id))
-        raise HTTPException(
-            status_code=status.HTTP_202_ACCEPTED,
-            detail="MFA verification required",
-            headers={"X-MFA-Required": "true", "X-User-ID": str(user.id)}
-        )
-    
-    # Create access token
-    access_token_expires = timedelta(hours=24)
-    access_token = create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
-    )
     
     # Record successful attempt
-    rate_limiter.record_attempt(request, True, str(user.id))
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserResponse.from_orm(user)
-    )
-
-@router.post("/verify-mfa", response_model=Token)
-async def verify_mfa(request: Request, mfa_data: MFAVerifyRequest, user_id: str, db: Session = Depends(get_db)):
-    """Verify MFA backup code"""
-    # Check rate limiting
-    check_rate_limit_middleware(request)
-    
-    # Get user
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        rate_limiter.record_attempt(request, False)
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Verify backup code
-    if not verify_backup_code(db, user_id, mfa_data.backup_code):
-        rate_limiter.record_attempt(request, False, user_id)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid backup code"
-        )
+    record_login_attempt(client_ip, user_data.email, successful=True)
     
     # Create access token
-    access_token_expires = timedelta(hours=24)
-    access_token = create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
-    )
-    
-    # Record successful attempt
-    rate_limiter.record_attempt(request, True, user_id)
+    access_token = create_access_token(data={"sub": user['id']})
     
     return Token(
         access_token=access_token,
@@ -135,55 +83,68 @@ async def verify_mfa(request: Request, mfa_data: MFAVerifyRequest, user_id: str,
     )
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
+async def get_current_user_info(current_user: dict = Depends(get_current_active_user)):
     """Get current user information"""
     return UserResponse.from_orm(current_user)
 
-@router.post("/enable-mfa", response_model=MFASetupResponse)
-async def enable_mfa(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    """Enable MFA for current user"""
-    if current_user.mfa_enabled:
+@router.post("/mfa/setup", response_model=MFASetupResponse)
+async def setup_mfa(current_user: dict = Depends(get_current_active_user)):
+    """Setup MFA for current user"""
+    if current_user.get('mfa_enabled'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="MFA is already enabled"
         )
     
-    backup_codes = enable_mfa_for_user(db, str(current_user.id))
+    backup_codes = enable_mfa_for_user(current_user['id'])
     
     return MFASetupResponse(backup_codes=backup_codes)
 
-@router.post("/disable-mfa")
-async def disable_mfa(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    """Disable MFA for current user"""
-    if not current_user.mfa_enabled:
+@router.post("/mfa/verify")
+async def verify_mfa(
+    mfa_data: MFAVerifyRequest,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Verify MFA backup code"""
+    if not current_user.get('mfa_enabled'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="MFA is not enabled"
         )
     
-    disable_mfa_for_user(db, str(current_user.id))
+    is_valid = verify_backup_code_for_user(current_user['id'], mfa_data.backup_code)
+    
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid backup code"
+        )
+    
+    return {"message": "MFA verified successfully"}
+
+@router.post("/mfa/disable")
+async def disable_mfa(current_user: dict = Depends(get_current_active_user)):
+    """Disable MFA for current user"""
+    if not current_user.get('mfa_enabled'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="MFA is not enabled"
+        )
+    
+    disable_mfa_for_user(current_user['id'])
     
     return {"message": "MFA disabled successfully"}
-
-@router.post("/regenerate-backup-codes", response_model=MFASetupResponse)
-async def regenerate_backup_codes(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    """Regenerate backup codes for current user"""
-    if not current_user.mfa_enabled:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="MFA is not enabled"
-        )
-    
-    backup_codes = enable_mfa_for_user(db, str(current_user.id))
-    
-    return MFASetupResponse(backup_codes=backup_codes)
 
 @router.get("/rate-limit-status")
 async def get_rate_limit_status(request: Request):
     """Get current rate limit status"""
-    remaining = rate_limiter.get_remaining_attempts(request)
+    client_ip = request.client.host
+    recent_attempts = get_recent_login_attempts(client_ip, 30)
+    failed_attempts = [attempt for attempt in recent_attempts if not attempt['successful']]
+    
+    remaining_attempts = max(0, 3 - len(failed_attempts))
+    
     return {
-        "remaining_attempts": remaining,
-        "max_attempts": rate_limiter.max_attempts,
-        "lockout_duration_minutes": rate_limiter.lockout_duration
+        "remaining_attempts": remaining_attempts,
+        "is_blocked": len(failed_attempts) >= 3
     }
