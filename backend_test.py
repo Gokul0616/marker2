@@ -628,6 +628,208 @@ class BackendTester:
             self.log_test("Databases API", False, f"Databases API error: {str(e)}")
             return False
 
+    def test_trash_functionality(self):
+        """Test 12: Trash Functionality - Test soft delete, trash retrieval, restore, and permanent delete"""
+        try:
+            if not self.auth_token:
+                if not self.test_user_login():
+                    self.log_test("Trash Functionality", False, "No auth token available")
+                    return False
+            
+            # First create a workspace for testing
+            workspace_data = {
+                "name": "Trash Test Workspace",
+                "icon": "🗑️",
+                "settings": {}
+            }
+            
+            workspace_response = self.session.post(f"{API_BASE}/workspaces/", json=workspace_data)
+            if workspace_response.status_code != 200:
+                self.log_test("Trash Functionality - Setup", False, "Failed to create test workspace")
+                return False
+            
+            self.test_workspace_id = workspace_response.json().get('id')
+            
+            # Create a test page
+            page_data = {
+                "title": "Test Page for Trash",
+                "icon": "📄",
+                "workspace_id": self.test_workspace_id,
+                "content": [{"type": "paragraph", "text": "This page will be deleted"}]
+            }
+            
+            page_response = self.session.post(f"{API_BASE}/pages/", json=page_data)
+            if page_response.status_code != 200:
+                self.log_test("Trash Functionality - Page Setup", False, "Failed to create test page")
+                return False
+            
+            self.test_page_id = page_response.json().get('id')
+            
+            # Create a test database
+            database_data = {
+                "name": "Test Database for Trash",
+                "workspace_id": self.test_workspace_id,
+                "properties": {
+                    "Name": {"type": "title"},
+                    "Status": {"type": "select", "options": ["Active", "Inactive"]}
+                },
+                "views": [{"name": "All Items", "type": "table", "filter": {}}]
+            }
+            
+            database_response = self.session.post(f"{API_BASE}/databases/", json=database_data)
+            if database_response.status_code != 200:
+                self.log_test("Trash Functionality - Database Setup", False, "Failed to create test database")
+                return False
+            
+            self.test_database_id = database_response.json().get('id')
+            
+            # Test 1: Delete page (soft delete - move to trash)
+            delete_page_response = self.session.delete(f"{API_BASE}/pages/{self.test_page_id}")
+            if delete_page_response.status_code != 200:
+                self.log_test("Trash Functionality - Delete Page", False, f"Failed to delete page: {delete_page_response.status_code}")
+                return False
+            
+            self.log_test("Trash Functionality - Delete Page", True, "Page moved to trash successfully")
+            
+            # Test 2: Delete database (soft delete - move to trash)
+            delete_database_response = self.session.delete(f"{API_BASE}/databases/{self.test_database_id}")
+            if delete_database_response.status_code != 200:
+                self.log_test("Trash Functionality - Delete Database", False, f"Failed to delete database: {delete_database_response.status_code}")
+                return False
+            
+            self.log_test("Trash Functionality - Delete Database", True, "Database moved to trash successfully")
+            
+            # Test 3: Get trash items
+            trash_response = self.session.get(f"{API_BASE}/trash/")
+            if trash_response.status_code != 200:
+                self.log_test("Trash Functionality - Get Trash", False, f"Failed to get trash items: {trash_response.status_code}")
+                return False
+            
+            trash_data = trash_response.json()
+            trash_items = trash_data.get('items', [])
+            
+            if len(trash_items) < 2:
+                self.log_test("Trash Functionality - Get Trash", False, f"Expected at least 2 items in trash, got {len(trash_items)}")
+                return False
+            
+            self.log_test("Trash Functionality - Get Trash", True, f"Retrieved {len(trash_items)} items from trash")
+            
+            # Find our test items in trash
+            page_in_trash = None
+            database_in_trash = None
+            
+            for item in trash_items:
+                if item['id'] == self.test_page_id and item['type'] == 'page':
+                    page_in_trash = item
+                elif item['id'] == self.test_database_id and item['type'] == 'database':
+                    database_in_trash = item
+            
+            if not page_in_trash:
+                self.log_test("Trash Functionality - Verify Page in Trash", False, "Page not found in trash")
+                return False
+            
+            if not database_in_trash:
+                self.log_test("Trash Functionality - Verify Database in Trash", False, "Database not found in trash")
+                return False
+            
+            self.log_test("Trash Functionality - Verify Items in Trash", True, "Both page and database found in trash")
+            
+            # Test 4: Restore page from trash
+            restore_page_response = self.session.post(f"{API_BASE}/trash/{self.test_page_id}/restore?item_type=page")
+            if restore_page_response.status_code != 200:
+                self.log_test("Trash Functionality - Restore Page", False, f"Failed to restore page: {restore_page_response.status_code}")
+                return False
+            
+            self.log_test("Trash Functionality - Restore Page", True, "Page restored successfully")
+            
+            # Test 5: Verify page is accessible again
+            restored_page_response = self.session.get(f"{API_BASE}/pages/{self.test_page_id}")
+            if restored_page_response.status_code != 200:
+                self.log_test("Trash Functionality - Verify Restored Page", False, "Restored page not accessible")
+                return False
+            
+            self.log_test("Trash Functionality - Verify Restored Page", True, "Restored page is accessible")
+            
+            # Test 6: Permanently delete database from trash
+            permanent_delete_response = self.session.delete(f"{API_BASE}/trash/{self.test_database_id}?item_type=database")
+            if permanent_delete_response.status_code != 200:
+                self.log_test("Trash Functionality - Permanent Delete", False, f"Failed to permanently delete database: {permanent_delete_response.status_code}")
+                return False
+            
+            self.log_test("Trash Functionality - Permanent Delete", True, "Database permanently deleted")
+            
+            # Test 7: Verify database is no longer in trash
+            final_trash_response = self.session.get(f"{API_BASE}/trash/")
+            if final_trash_response.status_code == 200:
+                final_trash_data = final_trash_response.json()
+                final_trash_items = final_trash_data.get('items', [])
+                
+                database_still_in_trash = any(item['id'] == self.test_database_id for item in final_trash_items)
+                
+                if database_still_in_trash:
+                    self.log_test("Trash Functionality - Verify Permanent Delete", False, "Database still found in trash after permanent delete")
+                    return False
+                
+                self.log_test("Trash Functionality - Verify Permanent Delete", True, "Database no longer in trash")
+            
+            # Clean up: Delete the restored page and workspace
+            self.session.delete(f"{API_BASE}/pages/{self.test_page_id}")
+            self.session.delete(f"{API_BASE}/workspaces/{self.test_workspace_id}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Trash Functionality", False, f"Trash functionality test error: {str(e)}")
+            return False
+    
+    def test_settings_endpoints(self):
+        """Test 13: Settings Endpoints - Test user settings and workspace settings"""
+        try:
+            if not self.auth_token:
+                if not self.test_user_login():
+                    self.log_test("Settings Endpoints", False, "No auth token available")
+                    return False
+            
+            # Test user profile settings (update user)
+            user_settings_data = {
+                "name": "Test User Updated",
+                "color": "#4CAF50",
+                "avatar": "https://example.com/avatar.jpg"
+            }
+            
+            user_update_response = self.session.put(f"{API_BASE}/users/me", json=user_settings_data)
+            if user_update_response.status_code != 200:
+                self.log_test("Settings Endpoints - User Settings", False, f"Failed to update user settings: {user_update_response.status_code}")
+                return False
+            
+            updated_user = user_update_response.json()
+            self.log_test("Settings Endpoints - User Settings", True, f"User settings updated: {updated_user.get('name')}")
+            
+            # Test workspace settings (if we have a workspace)
+            if self.test_workspace_id:
+                workspace_settings_data = {
+                    "name": "Updated Workspace Name",
+                    "settings": {
+                        "theme": "dark",
+                        "notifications": True,
+                        "public_access": False
+                    }
+                }
+                
+                workspace_update_response = self.session.put(f"{API_BASE}/workspaces/{self.test_workspace_id}", json=workspace_settings_data)
+                if workspace_update_response.status_code == 200:
+                    self.log_test("Settings Endpoints - Workspace Settings", True, "Workspace settings updated successfully")
+                else:
+                    self.log_test("Settings Endpoints - Workspace Settings", False, f"Failed to update workspace settings: {workspace_update_response.status_code}")
+            else:
+                self.log_test("Settings Endpoints - Workspace Settings", True, "No test workspace available (skipped)")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Settings Endpoints", False, f"Settings endpoints test error: {str(e)}")
+            return False
+
     def run_all_tests(self):
         """Run all backend tests including authentication and API endpoints"""
         print(f"🚀 Starting Complete Backend API Tests")
