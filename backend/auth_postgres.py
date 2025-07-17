@@ -4,14 +4,12 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session, relationship
 from pydantic import BaseModel
 import secrets
 import string
 import os
-from database import (
-    get_user_by_email, get_user_by_id, create_user, update_user,
-    create_backup_codes, verify_backup_code, get_user_backup_codes
-)
+from database import get_db, User, MFABackupCode
 
 # Security configurations
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'fallback-secret-key')
@@ -45,27 +43,16 @@ class UserResponse(BaseModel):
     
     @classmethod
     def from_orm(cls, obj):
-        # Handle both dict and object input
-        if isinstance(obj, dict):
-            data = {
-                'id': str(obj.get('id')),
-                'name': obj.get('name'),
-                'email': obj.get('email'),
-                'avatar': obj.get('avatar'),
-                'color': obj.get('color', '#3b82f6'),
-                'is_active': obj.get('is_active', True),
-                'mfa_enabled': obj.get('mfa_enabled', False)
-            }
-        else:
-            data = {
-                'id': str(obj.id),
-                'name': obj.name,
-                'email': obj.email,
-                'avatar': obj.avatar,
-                'color': obj.color,
-                'is_active': obj.is_active,
-                'mfa_enabled': obj.mfa_enabled
-            }
+        # Convert UUID to string for serialization
+        data = {
+            'id': str(obj.id),
+            'name': obj.name,
+            'email': obj.email,
+            'avatar': obj.avatar,
+            'color': obj.color,
+            'is_active': obj.is_active,
+            'mfa_enabled': obj.mfa_enabled
+        }
         return cls(**data)
 
 class TokenData(BaseModel):
@@ -120,18 +107,18 @@ def verify_token(token: str):
         )
 
 # Authentication functions
-def authenticate_user(email: str, password: str):
-    user = get_user_by_email(email)
+def authenticate_user(db: Session, email: str, password: str):
+    user = db.query(User).filter(User.email == email).first()
     if not user:
         return False
-    if not verify_password(password, user['hashed_password']):
+    if not verify_password(password, user.hashed_password):
         return False
     return user
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
     token_data = verify_token(token)
-    user = get_user_by_id(token_data.user_id)
+    user = db.query(User).filter(User.id == token_data.user_id).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -140,8 +127,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
     return user
 
-def get_current_active_user(current_user: dict = Depends(get_current_user)):
-    if not current_user.get('is_active', True):
+def get_current_active_user(current_user: User = Depends(get_current_user)):
+    if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
@@ -154,73 +141,67 @@ def generate_backup_codes(count: int = 8) -> list[str]:
         codes.append(code)
     return codes
 
-def create_user_backup_codes(user_id: str) -> list[str]:
+def create_user_backup_codes(db: Session, user_id: str) -> list[str]:
     """Create backup codes for a user"""
+    # Delete existing codes
+    db.query(MFABackupCode).filter(MFABackupCode.user_id == user_id).delete()
+    
     # Generate new codes
     codes = generate_backup_codes()
     
     # Save to database
-    create_backup_codes(user_id, codes)
+    for code in codes:
+        backup_code = MFABackupCode(
+            user_id=user_id,
+            code=code
+        )
+        db.add(backup_code)
     
+    db.commit()
     return codes
 
-def verify_backup_code_for_user(user_id: str, code: str) -> bool:
+def verify_backup_code(db: Session, user_id: str, code: str) -> bool:
     """Verify a backup code"""
-    return verify_backup_code(user_id, code)
+    backup_code = db.query(MFABackupCode).filter(
+        MFABackupCode.user_id == user_id,
+        MFABackupCode.code == code,
+        MFABackupCode.used == False
+    ).first()
+    
+    if not backup_code:
+        return False
+    
+    # Mark as used
+    backup_code.used = True
+    backup_code.used_at = datetime.utcnow()
+    db.commit()
+    
+    return True
 
-def enable_mfa_for_user(user_id: str) -> list[str]:
+def enable_mfa_for_user(db: Session, user_id: str) -> list[str]:
     """Enable MFA for a user and return backup codes"""
-    user = get_user_by_id(user_id)
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     # Generate backup codes
-    codes = create_user_backup_codes(user_id)
+    codes = create_user_backup_codes(db, user_id)
     
     # Enable MFA
-    update_user(user_id, {'mfa_enabled': True})
+    user.mfa_enabled = True
+    db.commit()
     
     return codes
 
-def disable_mfa_for_user(user_id: str):
+def disable_mfa_for_user(db: Session, user_id: str):
     """Disable MFA for a user"""
-    user = get_user_by_id(user_id)
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Disable MFA
-    update_user(user_id, {'mfa_enabled': False})
-
-def get_user_mfa_codes(user_id: str) -> list[dict]:
-    """Get user's MFA backup codes"""
-    return get_user_backup_codes(user_id)
-
-# User class for backwards compatibility
-class User:
-    def __init__(self, user_dict):
-        self.id = user_dict.get('id')
-        self.name = user_dict.get('name')
-        self.email = user_dict.get('email')
-        self.hashed_password = user_dict.get('hashed_password')
-        self.avatar = user_dict.get('avatar')
-        self.color = user_dict.get('color', '#3b82f6')
-        self.is_active = user_dict.get('is_active', True)
-        self.is_verified = user_dict.get('is_verified', False)
-        self.mfa_enabled = user_dict.get('mfa_enabled', False)
-        self.created_at = user_dict.get('created_at')
-        self.updated_at = user_dict.get('updated_at')
+    # Delete backup codes
+    db.query(MFABackupCode).filter(MFABackupCode.user_id == user_id).delete()
     
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'email': self.email,
-            'hashed_password': self.hashed_password,
-            'avatar': self.avatar,
-            'color': self.color,
-            'is_active': self.is_active,
-            'is_verified': self.is_verified,
-            'mfa_enabled': self.mfa_enabled,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at
-        }
+    # Disable MFA
+    user.mfa_enabled = False
+    db.commit()
