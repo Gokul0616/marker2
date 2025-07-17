@@ -535,19 +535,81 @@ const SettingsPage = () => {
           <TabsContent value="trash">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrashIcon className="h-5 w-5" />
-                  <span>Trash</span>
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrashIcon className="h-5 w-5" />
+                    <span>Trash</span>
+                    <Badge variant="secondary" className="ml-2">
+                      {trashItems.length}
+                    </Badge>
+                  </CardTitle>
+                  {trashItems.length > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={handleEmptyTrash}
+                      disabled={loadingTrash}
+                    >
+                      <AlertTriangleIcon className="h-4 w-4 mr-2" />
+                      Empty Trash
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <TrashIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No items in trash</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Deleted items will appear here and can be restored within 30 days
-                  </p>
-                </div>
+                {loadingTrash ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="text-gray-500 mt-2">Loading trash items...</p>
+                  </div>
+                ) : trashItems.length === 0 ? (
+                  <div className="text-center py-8">
+                    <TrashIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No items in trash</p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Deleted items will appear here and can be restored within 30 days
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {trashItems.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <div className="text-lg">{item.icon}</div>
+                          <div>
+                            <p className="font-medium">{item.title}</p>
+                            <p className="text-sm text-gray-500">
+                              {item.type === 'page' ? 'Page' : 'Database'} • {item.workspace_name}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Deleted {new Date(item.deleted_at).toLocaleDateString()} by {item.deleted_by.name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRestoreItem(item.id, item.type)}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <RestoreIcon className="h-4 w-4 mr-1" />
+                            Restore
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handlePermanentlyDeleteItem(item.id, item.type)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <XIcon className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
