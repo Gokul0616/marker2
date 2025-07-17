@@ -493,20 +493,50 @@ const BlockComponent = ({
       
       default:
         return (
-          <textarea
-            ref={inputRef}
-            value={block.content || ''}
-            onChange={handleContentChange}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            onKeyDown={onKeyDown}
-            className={`${baseClasses} ${focusClasses} min-h-[40px] leading-relaxed py-2`}
-            placeholder="Type '/' for commands, or just start writing..."
-            readOnly={!canEdit}
-            disabled={!canEdit}
-            rows={1}
-            style={{ resize: 'none' }}
-          />
+          <div className="relative">
+            <textarea
+              ref={inputRef}
+              value={block.content || ''}
+              onChange={handleContentChange}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              onKeyDown={handleKeyDown}
+              className={`${baseClasses} ${focusClasses} min-h-[40px] leading-relaxed py-2`}
+              placeholder="Type '/' for commands, or just start writing..."
+              readOnly={!canEdit}
+              disabled={!canEdit}
+              rows={1}
+              style={{ resize: 'none' }}
+            />
+            
+            {/* Command Menu */}
+            {showCommandMenu && canEdit && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50 min-w-[300px] max-h-[300px] overflow-y-auto">
+                {getFilteredCommands().map((command) => {
+                  const IconComponent = command.icon;
+                  return (
+                    <button
+                      key={command.id}
+                      onClick={() => executeCommand(command)}
+                      className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                    >
+                      <IconComponent className="h-4 w-4 mr-3 text-gray-400" />
+                      <div className="flex-1">
+                        <div className="font-medium">{command.title}</div>
+                        <div className="text-xs text-gray-500">{command.description}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+                
+                {getFilteredCommands().length === 0 && (
+                  <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                    No commands found
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         );
     }
   };
