@@ -88,7 +88,7 @@ async def get_page(
     db: Session = Depends(get_db)
 ):
     """Get page by ID"""
-    page = db.query(Page).filter(Page.id == page_id).first()
+    page = db.query(Page).filter(Page.id == page_id, Page.is_deleted == False).first()
     if not page:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
