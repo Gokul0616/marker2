@@ -1,4 +1,4 @@
-// Mock data for Notion clone
+// Mock data for MindNotes
 export const mockUsers = [
   {
     id: 'user1',
