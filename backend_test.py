@@ -192,11 +192,21 @@ class BackendTester:
             elif response.status_code == 400 and "already enabled" in response.text:
                 self.log_test("MFA Setup", True, "MFA already enabled (expected for repeat tests)")
                 # Try to get backup codes by regenerating them
-                regen_response = self.session.post(f"{API_BASE}/auth/regenerate-backup-codes")
+                regen_response = self.session.post(f"{API_BASE}/auth/mfa/regenerate")
                 if regen_response.status_code == 200:
                     mfa_data = regen_response.json()
                     self.backup_codes = mfa_data.get('backup_codes', [])
                     self.log_test("MFA Backup Codes", True, f"Got {len(self.backup_codes)} backup codes")
+                else:
+                    # If regenerate doesn't exist, try to disable and re-enable MFA
+                    disable_response = self.session.post(f"{API_BASE}/auth/mfa/disable")
+                    if disable_response.status_code == 200:
+                        # Now enable again
+                        enable_response = self.session.post(f"{API_BASE}/auth/mfa/setup")
+                        if enable_response.status_code == 200:
+                            mfa_data = enable_response.json()
+                            self.backup_codes = mfa_data.get('backup_codes', [])
+                            self.log_test("MFA Re-enable", True, f"MFA re-enabled with {len(self.backup_codes)} backup codes")
                 return True
             else:
                 self.log_test("MFA Setup", False, f"MFA setup failed: {response.status_code} - {response.text}")
