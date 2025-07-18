@@ -62,31 +62,22 @@ const Dashboard = () => {
       <Sidebar />
       
       <div className="flex-1 flex flex-col ml-64">
-        {/* Header */}
-        <header className="border-b bg-white px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {currentWorkspace.icon} {currentWorkspace.name}
-              </h1>
-              <Badge variant="secondary" className="text-xs">
-                {currentWorkspace.settings.permissions}
-              </Badge>
-            </div>
-            
+        {/* Top Header with User Info */}
+        <TopHeader 
+          title={`${currentWorkspace?.icon || '🏠'} ${currentWorkspace?.name || 'Workspace'}`}
+          rightContent={
             <div className="flex items-center space-x-4">
               <SearchBar />
               <CollaborationPanel />
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{user.name[0]}</AvatarFallback>
-              </Avatar>
+              <Badge variant="secondary" className="text-xs">
+                {currentWorkspace?.settings?.permissions || 'private'}
+              </Badge>
             </div>
-          </div>
-        </header>
+          }
+        />
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 mt-14">
           {searchResults.length > 0 ? (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Search Results</h2>
@@ -108,6 +99,18 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-8">
+              {/* Welcome Message */}
+              <section>
+                <div className="text-center py-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    Welcome back, {user?.name || 'User'}! 👋
+                  </h1>
+                  <p className="text-gray-600 text-lg">
+                    Ready to organize your thoughts and ideas in MindNotes?
+                  </p>
+                </div>
+              </section>
+
               {/* Quick Actions */}
               <section>
                 <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
