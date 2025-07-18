@@ -160,50 +160,49 @@ const DatabaseView = () => {
         </div>
 
         {/* Database Content */}
-        <div className="flex-1 overflow-hidden">
-          <Tabs value={selectedView} onValueChange={setSelectedView}>
-            <TabsContent value="table" className="h-full">
-              <DatabaseTable
-                database={database}
-                rows={processedRows}
-                onUpdateRow={handleUpdateRow}
-                onAddRow={handleAddRow}
-                onUpdateProperty={handleUpdateProperty}
-              />
-            </TabsContent>
-            
-            <TabsContent value="kanban" className="h-full">
-              <DatabaseKanban
-                database={database}
-                rows={processedRows}
-                onUpdateRow={handleUpdateRow}
-                onAddRow={handleAddRow}
-                groupBy={currentView.groupBy || 'status'}
-              />
-            </TabsContent>
-            
-            <TabsContent value="calendar" className="h-full">
-              <div className="p-6">
-                <div className="text-center py-12">
-                  <CalendarIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Calendar View</h3>
-                  <p className="text-gray-600">Calendar view coming soon...</p>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="chart" className="h-full">
-              <div className="p-6">
-                <div className="text-center py-12">
-                  <BarChart3Icon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Chart View</h3>
-                  <p className="text-gray-600">Chart visualization coming soon...</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+       <div className="flex-1 overflow-auto">
+  <Tabs value={selectedView} onValueChange={setSelectedView}>
+    <TabsContent value="table" className="h-full">
+      <DatabaseTable
+        database={database}
+        rows={processedRows}
+        onUpdateRow={handleUpdateRow}
+        onAddRow={handleAddRow}
+        onUpdateProperty={handleUpdateProperty}
+      />
+    </TabsContent>
+    
+    <TabsContent value="kanban" className="h-full">
+      <DatabaseKanban
+        database={database}
+        rows={processedRows}
+        onUpdateRow={handleUpdateRow}
+        onAddRow={handleAddRow}
+        groupBy={currentView.groupBy || 'status'}
+      />
+    </TabsContent>
+    
+    <TabsContent value="calendar" className="h-full">
+      <div className="p-6">
+        <div className="text-center py-12">
+          <CalendarIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Calendar View</h3>
+          <p className="text-gray-600">Calendar view coming soon...</p>
         </div>
       </div>
+    </TabsContent>
+    
+    <TabsContent value="chart" className="h-full">
+      <div className="p-6">
+        <div className="text-center py-12">
+          <BarChart3Icon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Chart View</h3>
+          <p className="text-gray-600">Chart visualization coming soon...</p>
+        </div>
+      </div>
+    </TabsContent>
+  </Tabs>
+</div>
 
       {/* Property Editor Modal */}
       {showPropertyEditor && (
