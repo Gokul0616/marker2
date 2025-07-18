@@ -66,7 +66,7 @@ export const mockPages = [
       {
         id: 'block2',
         type: 'paragraph',
-        content: 'This is a comprehensive Notion clone with all the features you love.',
+        content: 'This is a comprehensive MindNotes workspace with all the features you love.',
         properties: {}
       },
       {
