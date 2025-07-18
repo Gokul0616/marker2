@@ -217,7 +217,7 @@ const LandingPage = () => {
                 <span className="text-blue-600"> productivity</span>
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Write, plan, share, and get organized. NotionClone brings all your work together in one collaborative workspace.
+                Write, plan, share, and get organized. MindNotes brings all your work together in one collaborative workspace.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" onClick={handleGetStarted} className="text-lg px-8 py-3">
