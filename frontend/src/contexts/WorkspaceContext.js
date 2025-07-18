@@ -103,7 +103,15 @@ export const WorkspaceProvider = ({ children }) => {
   };
 
   const createPage = (parentId = null) => {
-    if (!currentWorkspace) return null;
+    if (!currentWorkspace) {
+      console.error('Cannot create page: No current workspace available');
+      return null;
+    }
+
+    if (!user) {
+      console.error('Cannot create page: No user available');
+      return null;
+    }
     
     const newPage = {
       id: `page_${Date.now()}`,
@@ -119,7 +127,7 @@ export const WorkspaceProvider = ({ children }) => {
           properties: {}
         }
       ],
-      created_by: user?.id,
+      created_by: user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       permissions: {
