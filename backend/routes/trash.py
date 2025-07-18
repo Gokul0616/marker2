@@ -97,7 +97,7 @@ async def restore_item_endpoint(
     workspace_ids = [ws['id'] for ws in user_workspaces]
     
     # Get the item to check workspace access
-    trash_items_raw = get_trash_items(workspace_ids)
+    trash_items_raw = db_get_trash_items(workspace_ids)
     item = next((item for item in trash_items_raw if item['id'] == item_id and item['type'] == item_type), None)
     
     if not item:
