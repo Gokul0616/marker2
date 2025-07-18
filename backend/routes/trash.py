@@ -6,7 +6,7 @@ import uuid
 
 from database import (
     get_user_workspaces, get_workspace_by_id, get_user_by_id,
-    get_trash_items, restore_item, permanently_delete_item, empty_trash
+    get_trash_items as db_get_trash_items, restore_item, permanently_delete_item, empty_trash
 )
 from auth import get_current_active_user, UserResponse
 
