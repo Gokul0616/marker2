@@ -29,7 +29,9 @@ const QuickActions = () => {
 
   const handleCreateDatabase = () => {
     const newDb = createDatabase('New Database');
-    navigate(`/database/${newDb.id}`);
+    if (newDb) {
+      navigate(`/database/${newDb.id}`);
+    }
   };
 
   const quickActions = [
