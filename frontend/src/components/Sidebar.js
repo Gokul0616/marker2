@@ -261,12 +261,12 @@ const Sidebar = () => {
       <div className="p-2 border-t border-gray-200">
         <div className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="text-xs">{user.name[0]}</AvatarFallback>
+            <AvatarImage src={user?.avatar} alt={user?.name} />
+            <AvatarFallback className="text-xs">{user?.name?.[0] || 'U'}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="text-xs font-medium">{user.name}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+            <p className="text-xs font-medium">{user?.name || 'User'}</p>
+            <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
           </div>
           <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={logout}>
             <TrashIcon className="h-3 w-3" />
