@@ -19,13 +19,23 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and ensure HTTPS
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Ensure all URLs use HTTPS
+    if (config.url && config.url.startsWith('http:')) {
+      config.url = config.url.replace(/^http:/, 'https:');
+    }
+    if (config.baseURL && config.baseURL.startsWith('http:')) {
+      config.baseURL = config.baseURL.replace(/^http:/, 'https:');
+    }
+    
+    console.log('Request URL:', config.baseURL + config.url);
     return config;
   },
   (error) => {
