@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: mindnotes-api
+    runtime: python3
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && gunicorn server:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHONPATH
+        value: backend
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRY_HOURS
+        value: 24
+      - key: RATE_LIMIT_REQUESTS
+        value: 3
+      - key: RATE_LIMIT_WINDOW
+        value: 1800
+
+  - type: pserv
+    name: mindnotes-db
+    databaseName: mindnotes
+    databaseUser: mindnotes_user
+    plan: starter
+
+  - type: redis
+    name: mindnotes-redis
+    plan: starter
