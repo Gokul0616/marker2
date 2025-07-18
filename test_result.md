@@ -435,12 +435,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Prepare application for Netlify hosting"
-    - "Optimize build configuration"
-    - "Configure environment variables for production"
-  stuck_tasks: []
+    - "Mixed Content Security Error Fix"
+    - "Settings Page Testing"
+    - "Trash Page Testing"
+  stuck_tasks:
+    - "Mixed Content Security Error Fix"
+    - "Settings Page Testing"
+    - "Trash Page Testing"
   test_all: false
-  test_priority: "production_deployment"
+  test_priority: "critical_security_fix"
 
 agent_communication:
   - agent: "main"
