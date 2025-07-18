@@ -101,8 +101,8 @@ const Sidebar = () => {
           onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
         >
           <div className="flex items-center space-x-2">
-            <span className="text-lg">{currentWorkspace.icon}</span>
-            <span className="font-medium text-sm">{currentWorkspace.name}</span>
+            <span className="text-lg">{currentWorkspace?.icon || '🏠'}</span>
+            <span className="font-medium text-sm">{currentWorkspace?.name || 'Loading...'}</span>
           </div>
           <ChevronDownIcon className="h-4 w-4" />
         </div>
