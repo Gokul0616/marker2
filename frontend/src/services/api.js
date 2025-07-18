@@ -134,7 +134,7 @@ export const usersAPI = {
 // Workspaces API
 export const workspacesAPI = {
   getWorkspaces: async () => {
-    const response = await api.get('/workspaces');
+    const response = await api.get('/workspaces/');
     return response.data;
   },
 
