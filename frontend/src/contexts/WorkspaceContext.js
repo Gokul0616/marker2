@@ -40,11 +40,37 @@ export const WorkspaceProvider = ({ children }) => {
       // Set the first workspace as current if none is selected
       if (!currentWorkspace && userWorkspaces.length > 0) {
         setCurrentWorkspace(userWorkspaces[0]);
+      } else if (userWorkspaces.length === 0) {
+        // Create a default workspace if none exists
+        const defaultWorkspace = await createDefaultWorkspace();
+        if (defaultWorkspace) {
+          setWorkspaces([defaultWorkspace]);
+          setCurrentWorkspace(defaultWorkspace);
+        }
       }
     } catch (error) {
       console.error('Error loading workspaces:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createDefaultWorkspace = async () => {
+    try {
+      const defaultWorkspaceData = {
+        name: 'My Workspace',
+        icon: '🏠',
+        settings: {
+          theme: 'light',
+          language: 'en'
+        }
+      };
+      
+      const newWorkspace = await workspacesAPI.createWorkspace(defaultWorkspaceData);
+      return newWorkspace;
+    } catch (error) {
+      console.error('Error creating default workspace:', error);
+      return null;
     }
   };
 
