@@ -1,6 +1,6 @@
-# Notion Clone - Production Deployment Guide
+# MindNotes - Production Deployment Guide
 
-This is a comprehensive Notion clone application with authentication, MFA, and workspace management features.
+This is a comprehensive MindNotes application with authentication, MFA, and workspace management features.
 
 ## ✅ Testing Status
 
