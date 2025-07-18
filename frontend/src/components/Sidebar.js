@@ -45,7 +45,9 @@ const Sidebar = () => {
 
   const handleCreatePage = () => {
     const newPage = createPage();
-    navigate(`/page/${newPage.id}`);
+    if (newPage) {
+      navigate(`/page/${newPage.id}`);
+    }
   };
 
   const renderPageTree = (pages, level = 0) => {
