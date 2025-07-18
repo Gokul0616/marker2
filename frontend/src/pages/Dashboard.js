@@ -17,20 +17,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { PlusIcon, DatabaseIcon, FileTextIcon, SettingsIcon } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user, logout, loading } = useAuth();
-  const { currentWorkspace, getPageTree, createPage } = useWorkspace();
+  const { user, logout, loading: authLoading } = useAuth();
+  const { currentWorkspace, getPageTree, createPage, loading: workspaceLoading } = useWorkspace();
   const { databases, searchResults } = useNotion();
   const [showTemplates, setShowTemplates] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/login');
       return;
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
-  if (loading) {
+  if (authLoading || workspaceLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
@@ -47,7 +47,9 @@ const Dashboard = () => {
 
   const handleCreatePage = () => {
     const newPage = createPage();
-    navigate(`/page/${newPage.id}`);
+    if (newPage) {
+      navigate(`/page/${newPage.id}`);
+    }
   };
 
   const handleCreateDatabase = () => {
