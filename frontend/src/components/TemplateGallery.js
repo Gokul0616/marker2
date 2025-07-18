@@ -14,18 +14,20 @@ const TemplateGallery = () => {
   const handleUseTemplate = (template) => {
     const newPage = createPage();
     
-    // Apply template content
-    const templateContent = template.content.map((block, index) => ({
-      id: `block_${Date.now()}_${index}`,
-      type: block.type,
-      content: block.content,
-      properties: block.properties || {}
-    }));
+    if (newPage) {
+      // Apply template content
+      const templateContent = template.content.map((block, index) => ({
+        id: `block_${Date.now()}_${index}`,
+        type: block.type,
+        content: block.content,
+        properties: block.properties || {}
+      }));
 
-    // Update page with template content
-    // This would normally be handled by the workspace context
-    console.log('Creating page from template:', template.name);
-    navigate(`/page/${newPage.id}`);
+      // Update page with template content
+      // This would normally be handled by the workspace context
+      console.log('Creating page from template:', template.name);
+      navigate(`/page/${newPage.id}`);
+    }
   };
 
   const categories = [...new Set(templates.map(t => t.category))];
