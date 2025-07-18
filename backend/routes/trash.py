@@ -20,7 +20,7 @@ class TrashItem(BaseModel):
     workspace_id: str
     workspace_name: str
     deleted_at: str
-    deleted_by: UserResponse
+    deleted_by: Optional[UserResponse] = None
     
     class Config:
         from_attributes = True
