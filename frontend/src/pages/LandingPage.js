@@ -65,7 +65,7 @@ const LandingPage = () => {
       name: "Sarah Johnson",
       role: "Product Manager",
       company: "TechCorp",
-      content: "This Notion clone has revolutionized how our team collaborates. The real-time editing is seamless!",
+      content: "MindNotes has revolutionized how our team collaborates. The real-time editing is seamless!",
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b2516509?w=64&h=64&fit=crop&crop=face"
     },
     {
