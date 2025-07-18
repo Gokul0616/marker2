@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useWorkspace } from '../contexts/WorkspaceContext';
 import { useNotion } from '../contexts/NotionContext';
 import Sidebar from '../components/Sidebar';
+import TopHeader from '../components/TopHeader';
 import SearchBar from '../components/SearchBar';
 import TemplateGallery from '../components/TemplateGallery';
 import RecentPages from '../components/RecentPages';
