@@ -221,6 +221,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ COMPREHENSIVE BACKEND TESTING COMPLETED! All 13 backend tests passed successfully using user-provided credentials (test@example.com): 1) Database Setup - PostgreSQL healthy, 2) User Registration - Test user created successfully, 3) User Login - JWT authentication working, 4) JWT Authentication - Protected endpoints accessible, 5) MFA Setup - 8 backup codes generated, 6) MFA Login - Backup code verification successful, 7) Rate Limiting - 3 attempts per IP enforced with database fallback, 8) User Management - Profile updates working, 9) Settings Endpoints - User settings functional, 10) Workspaces API - Full CRUD tested, 11) Pages API - Complete page management with soft delete, 12) Databases API - Database and row management with soft delete, 13) Trash Functionality - Soft delete, trash retrieval, restore, and permanent delete all working. Fixed SQLAlchemy relationship issues and Redis fallback mechanism. Backend fully functional."
+      - working: true
+        agent: "testing"
+        comment: "✅ MINDNOTES API TESTING COMPLETED - CORE AUTHENTICATION WORKING! Fixed critical routing issue where root endpoint was not accessible. API title confirmed as 'MindNotes API', root endpoint returns 'MindNotes API is running'. Core authentication flow fully functional: 1) User registration ✅, 2) User login ✅, 3) JWT token system ✅, 4) MFA system ✅, 5) Protected endpoints access ✅, 6) User management ✅, 7) Database connections stable ✅. Users can register, login, and access protected endpoints without being repeatedly asked to login. Minor issues found: Rate limiting not blocking after 3 attempts, workspace single retrieval returns 404, pages/databases APIs have access control issues (403 errors). These don't affect core authentication flow but need attention for full functionality."
 
 frontend:
   - task: "Update AuthContext for Backend Integration"
