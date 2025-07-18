@@ -391,20 +391,41 @@ frontend:
         agent: "testing"
         comment: "✅ QUICK ACTIONS COMPONENT FULLY TESTED: All quick action buttons tested and functional - Create Page (redirects to page editor), Create Database (redirects to database view), Use Template (toggles template display), Import, Automation, and Workspace Settings actions. Component renders correctly with proper card layouts, icons, and click handlers. All 6 quick action buttons working as expected with appropriate navigation and functionality."
 
-  - task: "Netlify Hosting Preparation"
+  - task: "Settings Page Testing"
     implemented: true
-    working: true
-    file: "frontend/build configuration"
-    stuck_count: 0
-    priority: "medium"
+    working: false
+    file: "frontend/src/pages/SettingsPage.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ SETTINGS PAGE TESTING FAILED - Mixed Content Error blocking functionality. Settings page exists with comprehensive tabs (Workspace, Members, Account, Trash) and form fields for workspace settings, appearance, privacy, notifications, and MFA integration. However, HTTPS frontend making HTTP requests to backend API causes React Error Boundaries to trigger, preventing proper page rendering. Settings tabs not accessible, sidebar navigation broken. Critical security issue prevents testing of workspace settings form fields, theme/language selection, permissions settings, notifications toggle, save functionality, member management, account settings, and MFA settings."
+
+  - task: "Trash Page Testing"
+    implemented: true
+    working: false
+    file: "frontend/src/pages/TrashPage.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ TRASH PAGE TESTING FAILED - Mixed Content Error blocking functionality. Dedicated Trash page exists with proper structure for displaying deleted items, restore/delete buttons, refresh functionality, and empty trash capability. However, HTTPS frontend making HTTP requests to backend API causes React Error Boundaries to trigger, preventing proper page rendering. Trash page header not found, refresh button not accessible, restore/delete functionality cannot be tested. Both settings trash tab and dedicated trash page affected by same Mixed Content security issue."
+
+  - task: "Mixed Content Security Error Fix"
+    implemented: false
+    working: false
+    file: "frontend/src/services/api.js"
+    stuck_count: 1
+    priority: "critical"
     needs_retesting: false
     status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Need to prepare frontend for static hosting, configure environment variables, optimize build"
-      - working: true
-        agent: "main"
-        comment: "Prepared for Netlify hosting - created build scripts, configured environment variables, optimized for static deployment"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL MIXED CONTENT ERROR - HTTPS frontend making HTTP requests to backend API blocked by browser security. Error: 'Mixed Content: The page at 'https://...' was loaded over HTTPS, but requested an insecure XMLHttpRequest endpoint 'http://...'. This request has been blocked; the content must be served over HTTPS.' Attempted fix by updating API_BASE_URL fallback to HTTPS but issue persists. Backend workspace endpoints returning 307 redirects suggesting additional routing issues. This blocks all frontend-backend communication and prevents Settings/Trash functionality testing."
 
 metadata:
   created_by: "main_agent"
