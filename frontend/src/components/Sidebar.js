@@ -122,7 +122,7 @@ const Sidebar = () => {
                 >
                   <span>{workspace.icon}</span>
                   <span className="text-sm">{workspace.name}</span>
-                  {workspace.id === currentWorkspace.id && (
+                  {workspace.id === currentWorkspace?.id && (
                     <Badge variant="secondary" className="text-xs">Current</Badge>
                   )}
                 </div>
