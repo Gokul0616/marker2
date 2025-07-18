@@ -182,7 +182,7 @@ class BackendTester:
                     self.log_test("MFA Setup", False, "No auth token available")
                     return False
             
-            response = self.session.post(f"{API_BASE}/auth/enable-mfa")
+            response = self.session.post(f"{API_BASE}/auth/mfa/setup")
             
             if response.status_code == 200:
                 mfa_data = response.json()
