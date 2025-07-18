@@ -34,6 +34,16 @@ api_router.include_router(pages.router)
 api_router.include_router(databases.router)
 api_router.include_router(trash.router)
 
+# Test endpoint for backward compatibility - AFTER other routers
+@api_router.get("/")
+async def root():
+    return {"message": "MindNotes API is running"}
+
+# Debug endpoint
+@api_router.get("/test")
+async def test_endpoint():
+    return {"message": "Test endpoint working"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
