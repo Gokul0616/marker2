@@ -133,7 +133,7 @@ const RegisterPage = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <CardDescription>
-            Sign up to start using Notion Clone
+            Sign up to start using MindNotes
           </CardDescription>
         </CardHeader>
         <CardContent>
