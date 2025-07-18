@@ -172,7 +172,7 @@ export const workspacesAPI = {
 // Pages API
 export const pagesAPI = {
   getPages: async (workspaceId = null, parentId = null) => {
-    let url = '/pages';
+    let url = '/pages/';
     const params = new URLSearchParams();
     
     if (workspaceId) params.append('workspace_id', workspaceId);
