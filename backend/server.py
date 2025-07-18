@@ -57,6 +57,11 @@ logger = logging.getLogger(__name__)
 async def root():
     return {"message": "MindNotes API is running"}
 
+# Debug endpoint
+@api_router.get("/test")
+async def test_endpoint():
+    return {"message": "Test endpoint working"}
+
 # Legacy status endpoints for backward compatibility
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
