@@ -22,7 +22,9 @@ const QuickActions = () => {
 
   const handleCreatePage = () => {
     const newPage = createPage();
-    navigate(`/page/${newPage.id}`);
+    if (newPage) {
+      navigate(`/page/${newPage.id}`);
+    }
   };
 
   const handleCreateDatabase = () => {
