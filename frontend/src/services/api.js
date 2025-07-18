@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get backend URL from environment
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://ac827962-613e-4bc5-866f-a2284f83392d.preview.emergentagent.com';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://fe1fb5e6-012a-408a-8ba0-34abb1e33e6b.preview.emergentagent.com';
 
 // Create axios instance
 const api = axios.create({
