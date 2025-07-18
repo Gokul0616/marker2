@@ -235,7 +235,7 @@ export const databasesAPI = {
   },
 
   createDatabase: async (databaseData) => {
-    const response = await api.post('/databases', databaseData);
+    const response = await api.post('/databases/', databaseData);
     return response.data;
   },
 
