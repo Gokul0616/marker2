@@ -16,7 +16,7 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # Create the main app without a prefix
-app = FastAPI(title="Notion Clone API", version="1.0.0")
+app = FastAPI(title="MindNotes API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
