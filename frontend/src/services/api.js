@@ -220,7 +220,7 @@ export const pagesAPI = {
 // Databases API
 export const databasesAPI = {
   getDatabases: async (workspaceId = null) => {
-    let url = '/databases';
+    let url = '/databases/';
     if (workspaceId) {
       url += `?workspace_id=${workspaceId}`;
     }
