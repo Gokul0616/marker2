@@ -192,7 +192,7 @@ export const pagesAPI = {
   },
 
   createPage: async (pageData) => {
-    const response = await api.post('/pages', pageData);
+    const response = await api.post('/pages/', pageData);
     return response.data;
   },
 
