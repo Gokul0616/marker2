@@ -30,7 +30,6 @@ api.interceptors.request.use(
       config.baseURL = config.baseURL.replace(/^http:/, 'https:');
     }
     
-    console.log('Request URL:', config.baseURL + config.url);
     return config;
   },
   (error) => {
