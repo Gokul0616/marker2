@@ -138,7 +138,7 @@ export const workspacesAPI = {
   },
 
   createWorkspace: async (workspaceData) => {
-    const response = await api.post('/workspaces', workspaceData);
+    const response = await api.post('/workspaces/', workspaceData);
     return response.data;
   },
 
