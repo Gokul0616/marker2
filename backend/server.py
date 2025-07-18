@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 # Test endpoint for backward compatibility
 @api_router.get("/")
 async def root():
-    return {"message": "Notion Clone API is running"}
+    return {"message": "MindNotes API is running"}
 
 # Legacy status endpoints for backward compatibility
 class StatusCheck(BaseModel):
