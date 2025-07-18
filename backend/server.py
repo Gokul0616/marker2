@@ -47,11 +47,23 @@ async def test_endpoint():
 # Include the router in the main app
 app.include_router(api_router)
 
+# Production CORS configuration
+allowed_origins = [
+    "http://localhost:3000",  # Development
+    "https://localhost:3000",  # Development HTTPS
+    "https://your-netlify-site.netlify.app",  # Production (update this)
+]
+
+# Add environment variable for additional origins
+if os.environ.get("ALLOWED_ORIGINS"):
+    additional_origins = os.environ.get("ALLOWED_ORIGINS").split(",")
+    allowed_origins.extend([origin.strip() for origin in additional_origins])
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=allowed_origins,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
