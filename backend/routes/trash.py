@@ -48,7 +48,7 @@ async def get_trash_items(
         workspace_ids = [workspace_id]
     
     # Get trash items
-    trash_items_raw = get_trash_items(workspace_ids)
+    trash_items_raw = db_get_trash_items(workspace_ids)
     
     # Convert to response format
     trash_items = []
