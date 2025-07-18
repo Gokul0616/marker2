@@ -279,7 +279,7 @@ export const databasesAPI = {
 // Trash API
 export const trashAPI = {
   getTrashItems: async (workspaceId = null) => {
-    let url = '/trash';
+    let url = '/trash/';
     if (workspaceId) {
       url += `?workspace_id=${workspaceId}`;
     }
