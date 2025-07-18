@@ -85,7 +85,7 @@ const LoginPage = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>
-            Sign in to your Notion Clone account
+            Sign in to your MindNotes account
           </CardDescription>
         </CardHeader>
         <CardContent>
