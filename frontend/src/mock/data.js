@@ -60,7 +60,7 @@ export const mockPages = [
       {
         id: 'block1',
         type: 'heading1',
-        content: 'Welcome to Your Notion Clone',
+        content: 'Welcome to MindNotes',
         properties: {}
       },
       {
