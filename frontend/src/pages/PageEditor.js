@@ -303,24 +303,38 @@ const PageEditorContent = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex">
-            {/* Editor */}
-            <div className="flex-1 overflow-auto">
-              <div className="max-w-4xl mx-auto px-6 py-8">
-                <BlockEditor 
-                  content={page.content}
-                  onChange={handleUpdateContent}
-                  canEdit={canEdit && isEditing}
-                  pageId={pageId}
-                  selectedBlocks={selectedBlocks}
-                  setSelectedBlocks={setSelectedBlocks}
-                />
+          <div 
+            ref={containerRef}
+            className="flex-1 flex overflow-hidden relative bg-gray-50"
+            style={{ 
+              cursor: isDragging ? 'grabbing' : 'grab',
+              userSelect: isDragging ? 'none' : 'auto'
+            }}
+          >
+            {/* Zoomable Content Container */}
+            <div
+              ref={contentRef}
+              style={transformStyle}
+              className="flex w-full min-h-full"
+            >
+              {/* Editor */}
+              <div className="flex-1 bg-white shadow-sm">
+                <div className="max-w-4xl mx-auto px-6 py-8">
+                  <BlockEditor 
+                    content={page.content}
+                    onChange={handleUpdateContent}
+                    canEdit={canEdit && isEditing}
+                    pageId={pageId}
+                    selectedBlocks={selectedBlocks}
+                    setSelectedBlocks={setSelectedBlocks}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Comments Panel */}
+            {/* Comments Panel - Outside of zoom container */}
             {showComments && (
-              <div className="w-80 border-l border-gray-200">
+              <div className="w-80 border-l border-gray-200 bg-white relative z-10">
                 <CommentsPanel 
                   comments={pageComments}
                   onAddComment={addComment}
@@ -328,6 +342,15 @@ const PageEditorContent = () => {
                 />
               </div>
             )}
+
+            {/* Zoom Controls */}
+            <ZoomControls
+              zoom={zoom}
+              onZoomChange={handleZoomChange}
+              onFitToScreen={fitToScreen}
+              onResetZoom={resetZoom}
+              position="bottom-left"
+            />
           </div>
         </div>
       </div>
