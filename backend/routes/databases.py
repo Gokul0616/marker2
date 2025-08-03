@@ -241,3 +241,209 @@ async def delete_database_endpoint(
         )
     
     return {"message": "Database deleted successfully"}
+
+# Database Row endpoints
+class DatabaseRowCreate(BaseModel):
+    database_id: str
+    properties: dict
+
+class DatabaseRowUpdate(BaseModel):
+    properties: dict
+
+class DatabaseRowResponse(BaseModel):
+    id: str
+    database_id: str
+    properties: dict = {}
+    created_at: str
+    updated_at: Optional[str] = None
+
+@router.get("/{database_id}/rows", response_model=List[DatabaseRowResponse])
+async def get_database_rows(
+    database_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get database rows"""
+    database = get_database_by_id(database_id)
+    if not database:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Database not found"
+        )
+    
+    # Check if user has access to workspace
+    user_workspaces = get_user_workspaces(current_user['id'])
+    workspace_ids = [ws['id'] for ws in user_workspaces]
+    
+    if database['workspace_id'] not in workspace_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    rows = database.get('rows', [])
+    return [
+        DatabaseRowResponse(
+            id=row.get('id', str(uuid.uuid4())),
+            database_id=database_id,
+            properties=row.get('properties', {}),
+            created_at=row.get('created_at', ''),
+            updated_at=row.get('updated_at')
+        )
+        for row in rows
+    ]
+
+@router.post("/{database_id}/rows", response_model=DatabaseRowResponse)
+async def create_database_row(
+    database_id: str,
+    row_data: DatabaseRowCreate,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Create a new database row"""
+    database = get_database_by_id(database_id)
+    if not database:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Database not found"
+        )
+    
+    # Check if user has access to workspace
+    user_workspaces = get_user_workspaces(current_user['id'])
+    workspace_ids = [ws['id'] for ws in user_workspaces]
+    
+    if database['workspace_id'] not in workspace_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    # Create new row
+    new_row = {
+        'id': str(uuid.uuid4()),
+        'properties': row_data.properties,
+        'created_at': datetime.utcnow().isoformat(),
+        'updated_at': None
+    }
+    
+    # Add row to database
+    current_rows = database.get('rows', [])
+    current_rows.append(new_row)
+    
+    # Update database with new row
+    success = update_database(database_id, {'rows': current_rows})
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to create row"
+        )
+    
+    return DatabaseRowResponse(
+        id=new_row['id'],
+        database_id=database_id,
+        properties=new_row['properties'],
+        created_at=new_row['created_at'],
+        updated_at=new_row['updated_at']
+    )
+
+@router.put("/{database_id}/rows/{row_id}", response_model=DatabaseRowResponse)
+async def update_database_row(
+    database_id: str,
+    row_id: str,
+    row_data: DatabaseRowUpdate,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Update database row"""
+    database = get_database_by_id(database_id)
+    if not database:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Database not found"
+        )
+    
+    # Check if user has access to workspace
+    user_workspaces = get_user_workspaces(current_user['id'])
+    workspace_ids = [ws['id'] for ws in user_workspaces]
+    
+    if database['workspace_id'] not in workspace_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    # Find and update row
+    current_rows = database.get('rows', [])
+    row_found = False
+    
+    for i, row in enumerate(current_rows):
+        if row.get('id') == row_id:
+            current_rows[i]['properties'] = row_data.properties
+            current_rows[i]['updated_at'] = datetime.utcnow().isoformat()
+            row_found = True
+            break
+    
+    if not row_found:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Row not found"
+        )
+    
+    # Update database with modified rows
+    success = update_database(database_id, {'rows': current_rows})
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to update row"
+        )
+    
+    # Return updated row
+    updated_row = next(row for row in current_rows if row.get('id') == row_id)
+    return DatabaseRowResponse(
+        id=updated_row['id'],
+        database_id=database_id,
+        properties=updated_row['properties'],
+        created_at=updated_row['created_at'],
+        updated_at=updated_row['updated_at']
+    )
+
+@router.delete("/{database_id}/rows/{row_id}")
+async def delete_database_row(
+    database_id: str,
+    row_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Delete database row"""
+    database = get_database_by_id(database_id)
+    if not database:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Database not found"
+        )
+    
+    # Check if user has access to workspace
+    user_workspaces = get_user_workspaces(current_user['id'])
+    workspace_ids = [ws['id'] for ws in user_workspaces]
+    
+    if database['workspace_id'] not in workspace_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
+    # Remove row from database
+    current_rows = database.get('rows', [])
+    updated_rows = [row for row in current_rows if row.get('id') != row_id]
+    
+    if len(updated_rows) == len(current_rows):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Row not found"
+        )
+    
+    # Update database with remaining rows
+    success = update_database(database_id, {'rows': updated_rows})
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to delete row"
+        )
+    
+    return {"message": "Row deleted successfully"}
