@@ -359,4 +359,12 @@ const PageEditorContent = () => {
   );
 };
 
+const PageEditor = () => {
+  return (
+    <ZoomProvider>
+      <PageEditorContent />
+    </ZoomProvider>
+  );
+};
+
 export default PageEditor;
