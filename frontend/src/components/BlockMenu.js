@@ -14,7 +14,9 @@ import {
   DatabaseIcon,
   CalendarIcon,
   FileIcon,
-  TableIcon
+  TableIcon,
+  ExternalLinkIcon,
+  AtSignIcon
 } from 'lucide-react';
 
 const BlockMenu = ({ position, onSelect, onClose }) => {
