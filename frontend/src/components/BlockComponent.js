@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
+import TableBlock from './blocks/TableBlock';
+import EmbedBlock from './blocks/EmbedBlock';
+import MentionBlock from './blocks/MentionBlock';
 import { 
   GripVerticalIcon, 
   MoreHorizontalIcon, 
@@ -21,7 +24,10 @@ import {
   TypeIcon,
   DatabaseIcon,
   CopyIcon,
-  MoveIcon
+  MoveIcon,
+  TableIcon,
+  ExternalLinkIcon,
+  AtSignIcon
 } from 'lucide-react';
 
 const BlockComponent = ({
