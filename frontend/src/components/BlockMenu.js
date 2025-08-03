@@ -36,6 +36,9 @@ const BlockMenu = ({ position, onSelect, onClose }) => {
     { type: 'code', icon: CodeIcon, label: 'Code', description: 'Capture a code snippet' },
     { type: 'quote', icon: QuoteIcon, label: 'Quote', description: 'Capture a quote' },
     { type: 'image', icon: ImageIcon, label: 'Image', description: 'Upload or embed an image' },
+    { type: 'table', icon: TableIcon, label: 'Table', description: 'Create a table with rows and columns' },
+    { type: 'embed', icon: ExternalLinkIcon, label: 'Embed', description: 'Embed external content like YouTube, Figma, etc.' },
+    { type: 'mention', icon: AtSignIcon, label: 'Mention', description: 'Reference pages, users, or dates' },
     { type: 'database', icon: DatabaseIcon, label: 'Database', description: 'Create a database' },
   ];
 
