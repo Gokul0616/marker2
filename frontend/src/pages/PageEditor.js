@@ -28,13 +28,26 @@ import {
   AlertCircleIcon
 } from 'lucide-react';
 
-const PageEditor = () => {
+const PageEditorContent = () => {
   const { pageId } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { pages, updatePage } = useWorkspace();
   const { comments, addComment } = useNotion();
   const { onlineUsers, getCursorsForBlock } = useCollaboration();
+  const {
+    zoom,
+    viewportOffset,
+    containerRef,
+    contentRef,
+    transformStyle,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    fitToScreen,
+    handleZoomChange,
+  } = useZoomContext();
+  
   const [showComments, setShowComments] = useState(false);
   const [selectedBlocks, setSelectedBlocks] = useState(new Set());
   const [isEditing, setIsEditing] = useState(true);
