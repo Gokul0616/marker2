@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get backend URL from environment
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://4bfc1741-16bc-49b6-b684-a4164d7737aa.preview.emergentagent.com';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://d5fb1acd-32ad-4282-8869-0f9c11aecb42.preview.emergentagent.com';
 
 // Ensure HTTPS protocol
 const HTTPS_API_BASE_URL = API_BASE_URL.replace(/^http:/, 'https:');
