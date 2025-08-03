@@ -38,6 +38,7 @@ const PageEditorContent = () => {
   const {
     zoom,
     viewportOffset,
+    isDragging,
     containerRef,
     contentRef,
     transformStyle,
