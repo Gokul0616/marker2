@@ -29,7 +29,10 @@ def serialize_doc(doc):
         result = {}
         for key, value in doc.items():
             if key == '_id':
-                result['id'] = str(value)
+                # Only use _id as id if there's no existing id field
+                if 'id' not in doc:
+                    result['id'] = str(value)
+                # Skip _id if there's already an id field
             elif isinstance(value, ObjectId):
                 result[key] = str(value)
             elif isinstance(value, datetime):
