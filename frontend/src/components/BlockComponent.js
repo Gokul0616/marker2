@@ -201,13 +201,29 @@ const BlockComponent = ({
       keywords: ['image', 'picture', 'photo', 'img']
     },
     {
-      id: 'database',
-      type: 'database',
-      title: 'Database',
-      description: 'Create a database',
-      icon: DatabaseIcon,
-      keywords: ['database', 'table', 'data', 'db']
-    }
+      id: 'table',
+      type: 'table',
+      title: 'Table',
+      description: 'Create a table with rows and columns',
+      icon: TableIcon,
+      keywords: ['table', 'grid', 'rows', 'columns']
+    },
+    {
+      id: 'embed',
+      type: 'embed',
+      title: 'Embed',
+      description: 'Embed external content',
+      icon: ExternalLinkIcon,
+      keywords: ['embed', 'link', 'iframe', 'youtube', 'figma']
+    },
+    {
+      id: 'mention',
+      type: 'mention',
+      title: 'Mention',
+      description: 'Reference pages, users, or dates',
+      icon: AtSignIcon,
+      keywords: ['mention', 'reference', '@', 'link']
+    },
   ];
 
   const getFilteredCommands = () => {
