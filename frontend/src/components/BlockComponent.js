@@ -513,6 +513,21 @@ const BlockComponent = ({
           </div>
         );
       
+      case 'table':
+        return <TableBlock block={block} onChange={onChange} canEdit={canEdit} />;
+      
+      case 'embed':
+        return <EmbedBlock block={block} onChange={onChange} canEdit={canEdit} />;
+      
+      case 'mention':
+        return (
+          <MentionBlock 
+            content={block.content}
+            onChange={onChange}
+            canEdit={canEdit}
+          />
+        );
+      
       default:
         return (
           <div className="relative">
